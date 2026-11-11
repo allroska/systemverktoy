@@ -33,6 +33,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Codex åpner og pusher PR-er via sin GitHub-app; uten dette avviser actionen bot-aktører.
           allowed_bots: "*"
+          # Viser en sporingskommentar på PR-en mens reviewen kjører, også om noe feiler.
+          track_progress: true
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -43,9 +45,9 @@ jobs:
             1. Se endringene med `gh pr diff ${{ github.event.pull_request.number }}` og PR-beskrivelsen med `gh pr view ${{ github.event.pull_request.number }} --comments`.
             2. Hvis det finnes en tidligere «## Claude-review»-kommentar, er dette en re-review: si hvilke funn som nå er rettet, og nevn bare nye eller gjenstående funn.
             3. Legg inline-kommentarer på de konkrete linjene for funn under «Må fikses» med mcp__github_inline_comment__create_inline_comment.
-            4. Post én oppsummerende kommentar med `gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/review.md` (skriv filen med Write-verktøyet først) i formatet fra CLAUDE.md (norsk, vanlig språk, «Kan merges», «Må fikses», «Bør fikses», «Kan vente», «Sjekk på TV-en etter merge», «Til Codex»).
+            4. Post én oppsummerende kommentar med `gh pr comment ${{ github.event.pull_request.number }} --body "<hele reviewen>"` i formatet fra CLAUDE.md (norsk, vanlig språk, «Kan merges», «Må fikses», «Bør fikses», «Kan vente», «Sjekk på TV-en etter merge», «Til Codex»).
 
             Du reviewer bare. Ikke endre filer, ikke push.
           claude_args: |
             --max-turns 40
-            --allowedTools "Read,Glob,Grep,Write(//tmp/**),mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
+            --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
