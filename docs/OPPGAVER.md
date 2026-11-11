@@ -109,3 +109,21 @@ yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
 "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 echo "export ANDROID_HOME=$ANDROID_HOME" >> "$HOME/.bashrc"
 ```
+
+---
+
+## Kommandoer i stedet for å klikke på GitHub (PowerShell)
+
+Engangsoppsett: `winget install --id GitHub.cli -e`, åpne nytt vindu, `gh auth login` (GitHub.com → HTTPS → Login with a web browser).
+
+```powershell
+$R = "allroska/systemverktoy"
+
+gh pr list -R $R                               # åpne PR-er
+gh pr view <nr> -R $R --comments               # les Claude-reviewen
+gh pr checks <nr> -R $R --watch                # vent på bygg + review
+gh pr merge <nr> -R $R --merge --delete-branch # merge
+gh pr close <nr> -R $R; gh pr reopen <nr> -R $R  # start review på nytt
+gh run watch -R $R                             # følg byggingen av APK
+gh release view -R $R                          # nyeste versjon
+```
