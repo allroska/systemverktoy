@@ -40,8 +40,8 @@ class TimelineScreenTest {
         TimelinePeriod(time(15, 40), time(16, 0), Category.HDMI, "tvx", title = "HDMI 4"),
         TimelinePeriod(time(16, 0), time(17, 50), Category.IDLE),
         TimelinePeriod(time(17, 50), time(17, 52), Category.HOME, "home", ongoing = true),
-    )
-    private val report = DayReport(rows, emptyList(), time(14, 8), true, false, false)
+    ).asReversed()
+    private val report = DayReport(rows.asReversed(), emptyList(), time(14, 8), true, false, false)
 
     @Test fun `timeline initially focuses first row and details return to the opened row`() {
         val raw = listOf(
@@ -71,17 +71,17 @@ class TimelineScreenTest {
 
     @Test fun `details and raw log preserve a scrolled viewport and the opened row`() {
         val many = (0..30).map { i -> TimelinePeriod(time(10, 0) + i * 180_000L,
-            time(10, 0) + (i + 1) * 180_000L, Category.APP_OPEN, "App $i") }
+            time(10, 0) + (i + 1) * 180_000L, Category.APP_OPEN, "App $i") }.asReversed()
         lateinit var navigation: TimelineNavigationState
         compose.setContent { SystemverktoyTheme {
             val state = rememberTimelineNavigation(day)
             SideEffect { navigation = state }
-            TimelineNavigation(day, day, time(17, 52), zone, report.copy(periods = many), { it }, {}, state) {
+            TimelineNavigation(day, day, time(17, 52), zone, report.copy(periods = many.asReversed()), { it }, {}, state) {
                 androidx.tv.material3.Text("Råloggtest")
             }
         } }
-        for (i in 1..15) compose.onNodeWithTag("period-${many[i - 1].start}").performKeyInput { pressKey(Key.DirectionDown) }
-        val target = compose.onNodeWithTag("period-${many[15].start}").assertIsFocused()
+        for (i in 1..25) compose.onNodeWithTag("period-${many[i - 1].start}").performKeyInput { pressKey(Key.DirectionDown) }
+        val target = compose.onNodeWithTag("period-${many[25].start}").assertIsFocused()
         var position = 0 to 0
         compose.runOnIdle { position = navigation.list.firstVisibleItemIndex to navigation.list.firstVisibleItemScrollOffset }
         assertTrue(position.first > 0)
@@ -163,7 +163,7 @@ class TimelineScreenTest {
         compose.onNodeWithTag("period-${rows.first().start}").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("I dag").assertExists()
         compose.runOnIdle { today = day.plusDays(1) }
-        compose.onNodeWithText("torsdag 12. november").assertExists()
+        compose.onNodeWithText("torsdag 12. november", substring = true).assertExists()
     }
 
     @Test fun `diagnostics requires an uninterrupted three second OK hold on heading`() {
@@ -187,12 +187,21 @@ class TimelineScreenTest {
     @Test fun `historical gaps have visible warning and remain in timeline`() {
         val gap = TimelinePeriod(time(15, 50), time(16, 30), Category.UNKNOWN)
         compose.setContent { SystemverktoyTheme {
-            DayScreen(day, day.plusDays(1), time(17, 52), zone, report.copy(periods = listOf(gap)), { it }, {}, {}, {})
+            DayScreen(day, day.plusDays(1), time(17, 52), zone, report.copy(periods = listOf(gap), monitoringStart = time(14, 0)), { it }, {}, {}, {})
         } }
-        compose.onNodeWithText("Ufullstendig dag", substring = true).assertExists()
+        compose.onNodeWithText("Ufullstendig:", substring = true).assertExists()
         compose.onNodeWithText("Ukjent – mangler logg").assertExists()
         compose.onNodeWithTag("period-${gap.start}").assertIsFocused()
         screenshot("history-gap")
+    }
+
+    @Test fun `details explain playback unknown before the first listener`() {
+        val historical = rows.first().copy(category = Category.APP_OPEN, playbackUnknown = true)
+        compose.setContent { SystemverktoyTheme {
+            SessionScreen(listOf(historical), emptyList(), zone, { it }, firstListener = time(17, 15)) { }
+        } }
+        compose.onNodeWithText("Appen fulgte ikke med på avspilling før 11. november 2026 kl. 17:15.").assertExists()
+        compose.onAllNodesWithText("App åpen – avspilling ukjent", substring = true).assertCountEquals(2)
     }
 
     @Test fun `setup focuses first missing permission and keeps high contrast`() {
@@ -219,6 +228,23 @@ class TimelineScreenTest {
             compose.onNodeWithTag("period-${rows[index].start}").assertIsFocused().assertIsDisplayed()
         }
         screenshot("today-1080-large-text")
+    }
+
+    @Test
+    @Config(qualifiers = "w960dp-h540dp-mdpi")
+    fun `compact screen shows twelve complete rows at 960 by 540 dp`() {
+        val many = (0..20).map { i -> TimelinePeriod(time(10, 0) + i * 180_000L,
+            time(10, 0) + (i + 1) * 180_000L, Category.APP_OPEN, "App $i") }
+        compose.setContent { SystemverktoyTheme {
+            DayScreen(day, day, time(17, 52), zone, report.copy(periods = many, monitoringStart = time(9, 0)), { it }, {}, {}, {})
+        } }
+        many.asReversed().take(12).forEach { row ->
+            compose.onNodeWithTag("period-${row.start}").assertIsDisplayed()
+            val rect = compose.onNodeWithTag("period-${row.start}").fetchSemanticsNode().boundsInRoot
+            assertTrue("Complete row inside screen: $rect", rect.top >= 0 && rect.bottom <= 540)
+        }
+        compose.onNodeWithTag("period-${many.last().start}").assertIsFocused()
+        screenshot("compact-960")
     }
 
     private fun screenshot(name: String) {

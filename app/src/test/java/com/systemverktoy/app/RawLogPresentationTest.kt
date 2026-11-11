@@ -30,7 +30,7 @@ class RawLogPresentationTest {
     }
 
     @Test fun importantFilterKeepsAppDiagnosticsWithAndWithoutOwnPackage() {
-        for (type in listOf("BOOT_COMPLETED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat")) {
+        for (type in listOf("BOOT_COMPLETED", "EXPORT_FAILED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat")) {
             for (pkg in listOf(null, own)) {
                 assertTrue("$type ($pkg)", isImportantEvent(
                     RawEvent(source = Source.APP, type = type, packageName = pkg), launcher, own))

@@ -13,6 +13,7 @@ class SystemverktoyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         CollectorWorker.schedule(this)
+        ExportWorker.schedule(this)
     }
 }
 
@@ -52,6 +53,7 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 context.repository.dao.insert(listOf(RawEvent(source = Source.APP, type = "BOOT_COMPLETED")))
                 CollectorWorker.schedule(context)
+                ExportWorker.schedule(context)
                 CollectorWorker.now(context)
                 requestListener(context)
             } finally { pending.finish() }

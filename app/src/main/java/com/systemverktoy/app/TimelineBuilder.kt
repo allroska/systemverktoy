@@ -13,6 +13,7 @@ data class TimelinePeriod(
     val packageName: String? = null,
     val title: String? = null,
     val ongoing: Boolean = false,
+    val playbackUnknown: Boolean = false,
     val signals: List<RawEvent> = emptyList(),
 ) {
     val durationMillis: Long get() = endExclusive - start
@@ -25,7 +26,10 @@ data class TimelinePeriod(
  * OFF is used internally but omitted from the returned, non-overlapping periods.
  */
 class TimelineBuilder {
-    fun build(events: List<RawEvent>, day: LocalDate, zone: ZoneId, now: Long): List<TimelinePeriod> {
+    fun build(events: List<RawEvent>, day: LocalDate, zone: ZoneId, now: Long,
+        firstListener: Long? = events.filter { it.source == Source.LISTENER && it.type == "onListenerConnected" }.minOfOrNull { it.time },
+        monitoringStart: Long = Long.MIN_VALUE,
+    ): List<TimelinePeriod> {
         val bounds = dayBounds(day, zone)
         val end = minOf(bounds.endExclusive, now)
         if (end <= bounds.start) return emptyList()
@@ -34,6 +38,11 @@ class TimelineBuilder {
         if (ordered.isEmpty()) return emptyList()
         val buffering = buffersBeforePlaying(ordered)
         val times = sortedSetOf(now)
+        if (monitoringStart <= now && monitoringStart > Long.MIN_VALUE) {
+            times += monitoringStart
+            if (monitoringStart <= now - HEARTBEAT_GAP) times += monitoringStart + HEARTBEAT_GAP
+        }
+        if (firstListener != null && firstListener <= now) times += firstListener
         ordered.forEach {
             times += it.time
             if (it.time + HEARTBEAT_GAP < now) times += it.time + HEARTBEAT_GAP
@@ -47,7 +56,8 @@ class TimelineBuilder {
             val batch = grouped[time].orEmpty()
             // Expire BEFORE applying new observations, so a late heartbeat cannot
             // resurrect playback last observed before a log gap. USAGE remains valid.
-            state.expire(time, batch.any { it.source == Source.APP && it.type == "heartbeat" })
+            if (time == monitoringStart) { state.expired = false; state.heartbeatAnchor = time }
+            if (time >= monitoringStart) state.expire(time, batch.any { it.source == Source.APP && it.type == "heartbeat" })
             batch.forEach { state.accept(it, it in buffering) }
             state.finishBatch()
             slices += state.slice(time, points.getOrElse(index + 1) { time })
@@ -62,11 +72,12 @@ class TimelineBuilder {
             val period = TimelinePeriod(start, stop, slice.category, slice.pkg, slice.title,
                 ongoing = stop == now && now < bounds.endExclusive && slice.category == live.category &&
                     slice.pkg == live.pkg && slice.title == live.title,
+                playbackUnknown = slice.category == Category.APP_OPEN && (firstListener == null || start < firstListener),
                 signals = slice.evidence.sortedWith(EVENT_ORDER))
             val previous = result.lastOrNull()
             if (previous != null && previous.endExclusive == start &&
                 previous.category == period.category && previous.packageName == period.packageName &&
-                previous.title == period.title) {
+                previous.title == period.title && previous.playbackUnknown == period.playbackUnknown) {
                 result[result.lastIndex] = previous.copy(endExclusive = stop, ongoing = period.ongoing,
                     signals = (previous.signals + period.signals).distinct().sortedWith(EVENT_ORDER))
             } else result += period

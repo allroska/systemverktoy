@@ -13,15 +13,21 @@ internal fun historyWindow(day: LocalDate, zone: ZoneId): HistoryWindow {
         bounds.endExclusive + Duration.ofMinutes(2).toMillis())
 }
 
-internal data class HistoryBatch(val events: List<RawEvent>, val oldest: Long?)
+internal data class HistoryBatch(val events: List<RawEvent>, val oldest: Long?,
+    val firstListener: Long? = events.filter { it.source == Source.LISTENER && it.type == "onListenerConnected" }.minOfOrNull { it.time },
+    val monitoringStart: Long? = events.filter { (it.source == Source.LISTENER && it.type == "onListenerConnected") ||
+        (it.source == Source.APP && it.type == "heartbeat") }.minOfOrNull { it.time },
+)
 internal data class DayReport(
     val periods: List<TimelinePeriod>, val raw: List<RawEvent>,
     val firstOn: Long?, val hasActivity: Boolean, val beforeHistory: Boolean, val limitedContext: Boolean,
+    val firstListener: Long? = null, val monitoringStart: Long? = null,
 ) {
     fun total(category: Category) = periods.filter { it.category == category }.sumOf { it.durationMillis }
     val watchingByApp get() = periods.filter { it.category == Category.WATCHING }
         .groupBy { it.packageName.orEmpty() }.mapValues { (_, rows) -> rows.sumOf { it.durationMillis } }
-    val gaps get() = periods.filter { it.category == Category.UNKNOWN }
+    val gaps get() = periods.filter { it.category == Category.UNKNOWN && it.durationMillis >= 60_000 &&
+        monitoringStart?.let { start -> it.start >= start } == true }
 }
 
 /** Bound database reads as well as replay. A boot/shutdown resets playback state;
@@ -39,17 +45,16 @@ internal fun dayReport(batch: HistoryBatch, day: LocalDate, zone: ZoneId, now: L
     val bounds = dayBounds(day, zone)
     val window = historyWindow(day, zone)
     val input = timelineInput(batch.events.filter { it.time in window.floor..minOf(window.end, now) }, bounds.start)
-    val all = TimelineBuilder().build(input, day, zone, minOf(window.end, now))
+    val all = TimelineBuilder().build(input, day, zone, minOf(window.end, now),
+        batch.firstListener, batch.monitoringStart ?: Long.MAX_VALUE)
     val dayEvents = input.filter { it.time in bounds && it.time <= now }
-    val firstKnown = all.firstOrNull { it.category != Category.UNKNOWN }
-    val firstOn = firstKnown?.start?.takeIf { it == bounds.start }
-        ?: dayEvents.firstOrNull { it.type.substringBefore(' ') in setOf("SCREEN_INTERACTIVE", "SCREEN_ON", "DEVICE_STARTUP", "BOOT_COMPLETED") }?.time
-        ?: firstKnown?.start
-    return DayReport(all.filter { it.packageName != ownPackage }, input, firstOn,
+    val firstOn = firstMeaningfulOn(all, input, bounds.start)
+    return DayReport(all.filter { it.packageName != ownPackage &&
+        (it.category != Category.UNKNOWN || it.durationMillis >= 60_000) }, input, firstOn,
         all.isNotEmpty() || dayEvents.any { it.type.substringBefore(' ') in setOf(
             "SCREEN_ON", "SCREEN_INTERACTIVE", "ACTIVITY_RESUMED", "heartbeat", "DREAMING_STARTED") },
         batch.oldest == null || batch.oldest >= bounds.endExclusive,
-        !hasContextReset(input, bounds.start) && batch.oldest?.let { it < window.floor } == true)
+        !hasContextReset(input, bounds.start) && batch.oldest?.let { it < window.floor } == true, batch.firstListener, batch.monitoringStart)
 }
 
 /** Warning only: standby clears foreground/playback too, but a dream does not.
@@ -123,7 +128,7 @@ internal fun periodTime(period: TimelinePeriod, zone: ZoneId): String {
 
 internal fun categoryText(period: TimelinePeriod): String = when (period.category) {
     Category.WATCHING -> "Sett på"
-    Category.APP_OPEN -> if (period.signals.lastOrNull { it.source == Source.MEDIA && it.packageName == period.packageName }
+    Category.APP_OPEN -> if (period.playbackUnknown) "App åpen – avspilling ukjent" else if (period.signals.lastOrNull { it.source == Source.MEDIA && it.packageName == period.packageName }
             ?.state?.startsWith("STATE_PAUSED") == true) "App åpen, pauset" else "App åpen, ingenting spilt"
     Category.IDLE -> "Sto bare på"
     Category.HOME -> "Startskjerm – teller ikke"
@@ -131,3 +136,56 @@ internal fun categoryText(period: TimelinePeriod): String = when (period.categor
     Category.HDMI -> "HDMI – egen sum"
     Category.OFF -> "Av"
 }
+
+/** Group by actual standby, so gaps in foreground evidence or a delayed startup
+ * event cannot turn one automatic reboot into multiple apparent power-ons. */
+internal fun firstMeaningfulOn(rows: List<TimelinePeriod>, events: List<RawEvent>, dayStart: Long): Long? {
+    var dreaming = false
+    val offTimes = mutableListOf<Long>()
+    events.groupBy { it.time }.toSortedMap().forEach { (time, batch) ->
+        if (batch.any { it.type.substringBefore(' ') == "DREAMING_STARTED" ||
+            (it.packageName == "com.google.android.apps.tv.dreamx" && it.activity?.substringAfterLast('.') == "DreamActivity" &&
+                it.type.startsWith("ACTIVITY_RESUMED")) }) dreaming = true
+        if (batch.any { it.type.substringBefore(' ') in setOf("DREAMING_STOPPED", "SCREEN_INTERACTIVE", "SCREEN_ON") }) dreaming = false
+        if (batch.any { it.type.startsWith("DEVICE_SHUTDOWN") } ||
+            (!dreaming && batch.any { it.type.substringBefore(' ') in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF") })) offTimes += time
+    }
+    val bouts = mutableListOf<MutableList<TimelinePeriod>>()
+    rows.forEach { row ->
+        val previous = bouts.lastOrNull()?.last()
+        if (previous == null || offTimes.any { it in previous.endExclusive..row.start }) bouts += mutableListOf(row)
+        else bouts.last() += row
+    }
+    return bouts.firstNotNullOfOrNull { bout ->
+        val known = bout.firstOrNull { it.category != Category.UNKNOWN } ?: return@firstNotNullOfOrNull null
+        val previousOff = offTimes.lastOrNull { it < known.start } ?: Long.MIN_VALUE
+        val powerOn = events.firstOrNull { it.time > previousOff && it.time <= known.start &&
+            it.type.substringBefore(' ') in setOf("SCREEN_INTERACTIVE", "SCREEN_ON") }?.time
+            ?: events.lastOrNull { it.time > previousOff && it.time <= known.start &&
+                it.type.substringBefore(' ') in setOf("DEVICE_STARTUP", "BOOT_COMPLETED") }?.time
+        val wakeStart = powerOn ?: known.start
+        // Android can persist DEVICE_STARTUP just after SCREEN_INTERACTIVE.
+        val bootWake = events.any { it.type.substringBefore(' ') == "DEVICE_STARTUP" &&
+            it.time >= wakeStart - 60_000 && it.time <= wakeStart + 60_000 }
+        val off = offTimes.firstOrNull { it > wakeStart }
+        val systemOnly = bout.all { row ->
+            row.packageName == "com.android.tv.settings" ||
+                (row.packageName == "com.google.android.apps.tv.launcherx" && row.signals.lastOrNull {
+                    it.source == Source.USAGE && it.type.startsWith("ACTIVITY_RESUMED") && it.packageName == row.packageName
+                }?.activity?.substringAfterLast('.') in setOf("FallbackHome", "DispatchActivity", "HomeActivity", "ProfileChooserActivity")) ||
+                (row.packageName?.startsWith("com.sony.dtv.") == true && row.packageName != "com.sony.dtv.tvx")
+        }
+        maxOf(dayStart, wakeStart).takeUnless { bootWake || (systemOnly && off != null && off - wakeStart <= 300_000) }
+    }
+}
+
+internal fun monitoringText(report: DayReport, day: LocalDate, zone: ZoneId): String? {
+    if (report.gaps.isNotEmpty()) return "Ufullstendig: ${report.gaps.size} hull, ${durationText(report.gaps.sumOf { it.durationMillis })}"
+    return report.monitoringStart?.takeIf { it >= dayBounds(day, zone).start }?.let {
+        "Appen fulgte med fra " + if (java.time.Instant.ofEpochMilli(it).atZone(zone).toLocalDate() == day)
+            "kl. ${clockText(it, zone)}" else dateClockText(it, zone)
+    }
+}
+
+internal fun dateClockText(time: Long, zone: ZoneId): String = Instant.ofEpochMilli(time).atZone(zone)
+    .format(DateTimeFormatter.ofPattern("d. MMMM yyyy 'kl.' HH:mm", java.util.Locale.forLanguageTag("nb")))

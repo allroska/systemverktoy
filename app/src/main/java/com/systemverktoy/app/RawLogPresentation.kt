@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 internal fun isImportantEvent(event: RawEvent, launcher: String?, ownPackage: String): Boolean {
     val type = event.type.substringBefore(" (")
     if (event.source == Source.APP && type in setOf(
-            "BOOT_COMPLETED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat",
+            "BOOT_COMPLETED", "EXPORT_FAILED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat",
         )) return true
     // Global signals may have no package, or refer to the listener's own package.
     if (event.source in setOf(Source.DREAM, Source.AUDIO, Source.LISTENER) ||
