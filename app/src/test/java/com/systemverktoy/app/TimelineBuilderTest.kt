@@ -64,9 +64,9 @@ class TimelineBuilderTest {
             media(10, "STATE_PLAYING (spiller)", nrk), media(80, "STATE_PAUSED (pauset)", nrk),
             event(90, Source.MEDIA, "SESSION_REMOVED", nrk), media(91, "STATE_NONE", nrk, type = "SESSION_ADDED"),
             media(95, "STATE_BUFFERING", nrk), media(100, "STATE_PLAYING (spiller)", nrk), end = 170)
-        assertEquals(listOf(Category.APP_OPEN, Category.WATCHING, Category.APP_OPEN, Category.WATCHING), categories(periods))
+        assertEquals(listOf(Category.APP_OPEN, Category.WATCHING), categories(periods))
         assertEquals(base + 5000, periods[1].start)
-        assertEquals(150L, duration(periods, Category.WATCHING))
+        assertEquals(165L, duration(periods, Category.WATCHING))
     }
 
     @Test fun `buffering without subsequent playing or interrupted by pause is not watching`() {
@@ -90,17 +90,77 @@ class TimelineBuilderTest {
         }
     }
 
-    @Test fun `short playing runs separated by pause cannot be added together`() {
-        assertEquals(0L, duration(build(pulse(), resume(), media(0, "STATE_PLAYING"),
+    @Test fun `short playing runs separated by a short pause are joined before preview filtering`() {
+        assertEquals(90L, duration(build(pulse(), resume(), media(0, "STATE_PLAYING"),
             media(40, "STATE_PAUSED"), media(50, "STATE_PLAYING"), media(90, "STATE_STOPPED")), Category.WATCHING))
     }
 
-    @Test fun `buffering separates playing runs instead of adding short previews together`() {
+    @Test fun `short buffering joins playing runs before preview filtering`() {
         for (firstRun in listOf(30L, 70L)) {
             val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
                 media(firstRun, "STATE_BUFFERING"), media(firstRun + 10, "STATE_PLAYING"),
                 media(firstRun + 40, "STATE_STOPPED"))
-            assertEquals(if (firstRun < 60) 0L else firstRun, duration(periods, Category.WATCHING))
+            assertEquals(firstRun + 40, duration(periods, Category.WATCHING))
+        }
+    }
+
+    @Test fun `40 seconds playing 5 buffering 40 playing gives one 85 second watching period`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
+            media(40, "STATE_BUFFERING"), media(45, "STATE_PLAYING"), media(85, "STATE_STOPPED"), end = 85)
+        assertEquals(Category.WATCHING, periods.single().category)
+        assertEquals(85_000L, periods.single().durationMillis)
+        assertTrue(periods.single().signals.any { it.state == "STATE_BUFFERING" })
+    }
+
+    @Test fun `interruption threshold is strictly below 30 seconds`() {
+        for (gap in listOf(29_999L, 30_000L, 30_001L)) {
+            val end = base + 80_000 + gap
+            val events = listOf(pulse(), resume(), media(0, "STATE_PLAYING"), media(40, "STATE_BUFFERING"),
+                media(0, "STATE_PLAYING").copy(time = base + 40_000 + gap), media(0, "STATE_STOPPED").copy(time = end))
+            val periods = builder.build(events, day, zone, end)
+            assertEquals(if (gap < 30_000) 80_000 + gap else 0L,
+                periods.filter { it.category == Category.WATCHING }.sumOf { it.durationMillis })
+        }
+    }
+
+    @Test fun `long internal buffering remains app open between qualifying watching runs`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), media(70, "STATE_BUFFERING"),
+            media(100, "STATE_PLAYING"), media(170, "STATE_STOPPED"), end = 170)
+        assertEquals(listOf(Category.WATCHING, Category.APP_OPEN, Category.WATCHING), categories(periods))
+        assertEquals(30_000L, periods[1].durationMillis)
+    }
+
+    @Test fun `60 second filter uses merged duration including short interruptions`() {
+        for ((playing, expected) in listOf(20L to Category.APP_OPEN, 30L to Category.WATCHING)) {
+            val end = playing + 30
+            val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), media(playing, "STATE_BUFFERING"),
+                media(playing + 5, "STATE_PLAYING"), media(end, "STATE_STOPPED"), end = end)
+            assertEquals(expected, periods.single().category)
+        }
+    }
+
+    @Test fun `unconfirmed short interruption at now is not filled using future playback`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), media(70, "STATE_PAUSED"),
+            media(85, "STATE_PLAYING"), end = 80)
+        assertEquals(listOf(Category.WATCHING, Category.APP_OPEN), categories(periods))
+        assertEquals(10_000L, periods.last().durationMillis)
+    }
+
+    @Test fun `short interruptions never bridge power idle home HDMI other apps or missing logs`() {
+        val cases = listOf(
+            listOf(event(70, Source.APP, "SCREEN_OFF"), event(75, Source.APP, "SCREEN_ON"), resume(75)) to Category.OFF,
+            listOf(event(70, Source.DREAM, "DREAMING_STARTED"), event(75, Source.DREAM, "DREAMING_STOPPED")) to Category.IDLE,
+            listOf(resume(70, home), resume(75)) to Category.HOME,
+            listOf(resume(70, tvx), resume(75)) to Category.HDMI,
+            listOf(resume(70, nrk), resume(75)) to Category.APP_OPEN,
+            listOf(listener(70, false), listener(75, true)) to Category.UNKNOWN,
+        )
+        for ((events, barrier) in cases) {
+            val periods = builder.build(listOf(pulse(), resume(), media(0, "STATE_PLAYING")) + events +
+                media(75, "STATE_PLAYING", type = "SESSION_ADDED"), day, zone, base + 150_000)
+            assertEquals(2, periods.count { it.category == Category.WATCHING })
+            assertEquals(145L, duration(periods, Category.WATCHING))
+            if (barrier != Category.OFF) assertEquals(5L, duration(periods, barrier))
         }
     }
 
@@ -320,6 +380,45 @@ class TimelineBuilderTest {
         }
     }
 
+    @Test fun `boot completed after device startup preserves Netflix playback and evidence`() {
+        val boot = event(4060, Source.APP, "BOOT_COMPLETED")
+        val playing = media(4025, "STATE_PLAYING", type = "SESSION_ADDED")
+        val periods = build(usage(4000, "DEVICE_STARTUP (27)"), resume(4010, home),
+            resume(4020), playing, boot, end = 4200)
+        val watching = periods.single { it.category == Category.WATCHING }
+        assertEquals(base + 4_025_000, watching.start)
+        assertEquals(175_000L, watching.durationMillis)
+        assertTrue(watching.signals.containsAll(listOf(playing, boot)))
+        assertFalse(periods.any { it.category == Category.UNKNOWN })
+    }
+
+    @Test fun `boot completed after device startup preserves audio reserve`() {
+        val periods = build(usage(0, "DEVICE_STARTUP (27)"), resume(1), audio(2, 1),
+            event(10, Source.APP, "BOOT_COMPLETED"), end = 80)
+        assertEquals(78L, duration(periods, Category.WATCHING))
+    }
+
+    @Test fun `shutdown invalidates earlier startup before standalone boot completed`() {
+        val periods = build(usage(0, "DEVICE_STARTUP (27)"), resume(10), media(10, "STATE_PLAYING"), audio(10, 1),
+            usage(100, "DEVICE_SHUTDOWN (26)"), event(110, Source.APP, "BOOT_COMPLETED"), resume(120), end = 200)
+        assertEquals(listOf(Category.WATCHING, Category.APP_OPEN), categories(periods))
+        assertEquals(base + 120_000, periods.last().start)
+    }
+
+    @Test fun `boot completed more than ten minutes after startup resets old state`() {
+        val periods = build(usage(0, "DEVICE_STARTUP (27)"), resume(10), media(10, "STATE_PLAYING"), audio(10, 1),
+            event(601, Source.APP, "BOOT_COMPLETED"), resume(602), end = 700)
+        assertEquals(listOf(Category.WATCHING, Category.APP_OPEN), categories(periods))
+        assertEquals(base + 602_000, periods.last().start)
+    }
+
+    @Test fun `associated boot completed at ten minutes does not renew heartbeat deadline`() {
+        val periods = build(usage(0, "DEVICE_STARTUP (27)"), resume(1, home),
+            event(600, Source.APP, "BOOT_COMPLETED"), end = 2200)
+        assertEquals(listOf(Category.HOME, Category.UNKNOWN), categories(periods))
+        assertEquals(base + 2_100_000, periods.last().start)
+    }
+
     @Test fun `background Spotify playing prevents audio from being assigned to settings or Downloader`() {
         for (pkg in listOf("com.android.tv.settings", "com.esaba.downloader")) {
             val periods = build(pulse(), resume(pkg = pkg),
@@ -376,6 +475,20 @@ class TimelineBuilderTest {
         assertEquals(40_000L, tomorrow.durationMillis)
         assertTrue(tomorrow.ongoing)
         assertTrue(tomorrow.signals.any { it.time < midnight })
+    }
+
+    @Test fun `short buffering across midnight joins before preview filtering and day clipping`() {
+        val midnight = dayBounds(day, zone).endExclusive
+        val events = listOf(pulse(), resume(), media(0, "STATE_PLAYING"), media(40, "STATE_BUFFERING"),
+            media(45, "STATE_PLAYING"), media(85, "STATE_STOPPED"))
+            .map { it.copy(time = it.time - base + midnight - 40_000) }
+        val now = midnight + 45_000
+        val before = builder.build(events, day, zone, now).single()
+        val after = builder.build(events, day.plusDays(1), zone, now).single()
+        assertEquals(Category.WATCHING, before.category)
+        assertEquals(Category.WATCHING, after.category)
+        assertEquals(40_000L, before.durationMillis)
+        assertEquals(45_000L, after.durationMillis)
     }
 
     @Test fun `both daylight saving days use real elapsed time and local boundaries`() {

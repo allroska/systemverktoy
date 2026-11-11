@@ -85,6 +85,7 @@ class TimelineBuilder {
         var dreaming = false
         var disconnected = false
         var heartbeatAnchor: Long? = null
+        var lastDeviceStartup: Long? = null
         var expired = false
         var foreground: Pair<String, String?>? = null
         val media = mutableMapOf<String, Pair<RawEvent, Boolean>>()
@@ -115,8 +116,18 @@ class TimelineBuilder {
             val type = event.type.substringBefore(' ')
             val pkg = event.packageName
             when {
-                type in setOf("DEVICE_STARTUP", "BOOT_COMPLETED") -> {
+                type == "DEVICE_STARTUP" -> {
                     screenOn(event.time, restart = true)
+                    lastDeviceStartup = event.time
+                    evidence["power"] = event
+                }
+                type == "BOOT_COMPLETED" -> {
+                    // Android can deliver this after activities and sessions
+                    // have already resumed in the same boot.
+                    if (lastDeviceStartup?.let { event.time - it in 0..BOOT_WINDOW } != true) {
+                        screenOn(event.time, restart = true)
+                        lastDeviceStartup = null
+                    }
                     evidence["power"] = event
                 }
                 type in setOf("SCREEN_INTERACTIVE", "SCREEN_ON") -> {
@@ -125,7 +136,7 @@ class TimelineBuilder {
                 }
                 type in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF", "DEVICE_SHUTDOWN") -> {
                     interactive = false
-                    if (type == "DEVICE_SHUTDOWN") dreaming = false
+                    if (type == "DEVICE_SHUTDOWN") { dreaming = false; lastDeviceStartup = null }
                     evidence["power"] = event
                 }
                 type == "DREAMING_STARTED" || (type == "ACTIVITY_RESUMED" && isDream(event)) -> {
@@ -216,21 +227,40 @@ class TimelineBuilder {
     }
 
     private fun suppressPreviews(slices: List<Slice>) {
+        // Buffering is credited only after the following playback qualifies.
+        slices.filter { it.category == Category.WATCHING && it.playback == Playback.BUFFERING }
+            .forEach { it.category = Category.APP_OPEN }
         var index = 0
+        var previousPlaybackApp: String? = null
         while (index < slices.size) {
             val first = slices[index]
-            if (first.category != Category.WATCHING || first.playback == Playback.AUDIO) { index++; continue }
-            var end = index
-            var playing = 0L
-            while (end < slices.size && slices[end].category == Category.WATCHING &&
-                slices[end].pkg == first.pkg && slices[end].playback != Playback.AUDIO) {
-                // Buffering belongs to the following PLAYING run, never a bridge
-                // that adds two short PLAYING runs up to the preview threshold.
-                if (playing > 0 && slices[end].playback == Playback.BUFFERING) break
-                if (slices[end].playback == Playback.PLAYING) playing += slices[end].end - slices[end].start
-                end++
+            if (first.category != Category.WATCHING) {
+                if (first.category != Category.APP_OPEN || first.pkg != previousPlaybackApp) previousPlaybackApp = null
+                index++
+                continue
             }
-            if (playing < MIN_PLAYING) for (i in index until end) slices[i].category = Category.APP_OPEN
+            var end = index + 1
+            while (end < slices.size) {
+                if (slices[end].category == Category.WATCHING && slices[end].pkg == first.pkg) { end++; continue }
+                var next = end
+                while (next < slices.size && slices[next].category == Category.APP_OPEN && slices[next].pkg == first.pkg) next++
+                if (next == slices.size || slices[next].category != Category.WATCHING ||
+                    slices[next].pkg != first.pkg || slices[next].start - slices[end].start >= MAX_INTERRUPTION) break
+                end = next + 1
+            }
+            val qualified = slices[end - 1].end - first.start >= MIN_PLAYING ||
+                (index until end).any { slices[it].playback == Playback.AUDIO }
+            if (qualified && previousPlaybackApp != first.pkg) {
+                // Initial buffering may explain the start of playback. Do not
+                // credit a long internal interruption as initial buffering.
+                var prefix = index - 1
+                while (prefix >= 0 && slices[prefix].category == Category.APP_OPEN &&
+                    slices[prefix].pkg == first.pkg && slices[prefix].playback == Playback.BUFFERING) {
+                    slices[prefix--].category = Category.WATCHING
+                }
+            }
+            for (i in index until end) slices[i].category = if (qualified) Category.WATCHING else Category.APP_OPEN
+            previousPlaybackApp = first.pkg
             index = end
         }
     }
@@ -257,6 +287,8 @@ class TimelineBuilder {
         private const val TVX = "com.sony.dtv.tvx"
         private val HEARTBEAT_GAP = Duration.ofMinutes(35).toMillis()
         private val MIN_PLAYING = Duration.ofSeconds(60).toMillis()
+        private val MAX_INTERRUPTION = Duration.ofSeconds(30).toMillis()
+        private val BOOT_WINDOW = Duration.ofMinutes(10).toMillis()
         private fun isDream(event: RawEvent) = event.packageName == "com.google.android.apps.tv.dreamx" &&
             event.activity?.substringAfterLast('.') == "DreamActivity"
 

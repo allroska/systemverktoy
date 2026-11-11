@@ -37,14 +37,21 @@ fortsatt UNKNOWN også uten kjent app.
   at brukeren må bytte app først. Bare nye RESUMED-hendelser bytter forgrunnsapp;
   PAUSED og STOPPED lager ikke falske logghull ved appbytte eller systemoverlegg.
   Ved vanlig skjerm av eller nedstengning nullstilles også forgrunnsappen.
-  DEVICE_STARTUP og BOOT_COMPLETED nullstiller alltid gammel app/avspilling og
-  starter en ny 35-minuttersfrist, også etter strømbrudd uten et av-signal.
-- **Korte avspillinger:** 60-sekundersregelen gjelder sammenhengende avspilling
-  med MediaSession, også før klipping ved midnatt. Metadata og hjerteslag bryter
-  ikke avspillingen. Pause eller ny BUFFERING bryter PLAYING-forløpet.
-  BUFFERING tas med når neste status i samme sesjonsforløp er
-  PLAYING, men buffer-tid oppfyller ikke kravet om 60 sekunder PLAYING. En pågående
-  kort avspilling vises først som APP_OPEN og omberegnes etter 60 sekunder.
+  Første oppstartssignal nullstiller gammel app/avspilling og starter en ny
+  35-minuttersfrist, også etter strømbrudd uten et av-signal. BOOT_COMPLETED etter
+  en DEVICE_STARTUP innen 10 minutter, uten DEVICE_SHUTDOWN imellom, legges bare
+  til som råbevis. Da beholdes ny app, media, lyd og hjerteslagsfrist fra samme
+  oppstart. Kommer BOOT_COMPLETED alene eller senere, beholdes full nullstilling.
+  Ti minutter følger reviewens forslag til «kort tid før»; SPEC setter ingen grense.
+- **Korte avspillinger:** Etter produktvalget i SPEC kap. 4 slås bekreftede
+  avspillinger i samme forgrunnsapp sammen over avbrudd under 30 sekunder, også
+  pause eller bytte av MediaSession. Sammenslått varighet, inkludert disse avbruddene,
+  vurderes deretter mot 60-sekundersregelen, før klipping ved midnatt. Avbrudd på
+  30 sekunder eller mer beholdes som APP_OPEN og slås ikke sammen. Appbytte, HOME,
+  HDMI, skjermsparer, skjerm av og UNKNOWN bryter alltid sammenhengen. Et pågående
+  avbrudd fylles ikke uten et nytt avspillingssignal. Metadata og hjerteslag bryter
+  ikke avspillingen. Bufring før første kvalifiserte avspilling kan tas med som
+  grunnlag for starttidspunktet, men inngår ikke i 60-sekundersgrunnlaget.
   AUDIO-reserven har ingen PLAYING-status og filtreres derfor ikke etter lengde.
   Reserven brukes bare når forgrunnsappen mangler MediaSession og ingen annen
   pakke har en aktiv PLAYING-sesjon. Dermed tilordnes ikke kjent bakgrunnslyd fra
