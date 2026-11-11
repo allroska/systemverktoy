@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/systemverktoy-release.jks
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    steps:
+      - name: Check signing secrets
+        shell: bash
+        run: |
+          missing=0
+          for secret in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!secret}" ]]; then
+              echo "::error::Mangler GitHub Secret: $secret. Release må signeres med den faste nøkkelen."
+              missing=1
+            fi
+          done
+          exit "$missing"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode signing key
+        shell: bash
+        run: |
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RELEASE_KEYSTORE_PATH"
+      - name: Build signed release
+        run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Publish APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/systemverktoy.apk"
+          gh release create "v${GITHUB_RUN_NUMBER}" "$RUNNER_TEMP/systemverktoy.apk" \
+            --target "$GITHUB_SHA" --title "Systemverktøy 1.0.${GITHUB_RUN_NUMBER}" --generate-notes
+      - name: Remove signing key
+        if: always()
+        shell: bash
+        run: rm -f "$RELEASE_KEYSTORE_PATH"
