@@ -3,6 +3,10 @@ name: Release
 on:
   push:
     branches: [main]
+    # Ingen ny app-versjon når bare dokumentasjon endres.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:

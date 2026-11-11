@@ -19,8 +19,12 @@ En liten, helt lokal Android TV-app som viser en tidslinje over hvordan TV-en ha
 
 ## Installere på TV-en
 
-1. Installer **Downloader** fra Play Store på TV-en.
-2. Åpne nyeste versjon:
+1. Installer **Downloader by AFTVnews** fra Play Store på TV-en.
+2. **Slå av Play Protect-skanning midlertidig** (Play Butikk → profil → Innstillinger → Google Play Protect). Ellers blokkeres appen fordi den ber om tilgang til bruksdata og varsler.
+3. Åpne nyeste versjon i Downloader:
    `https://github.com/allroska/systemverktoy/releases/latest/download/systemverktoy.apk`
-3. Tillat installasjon fra Downloader første gang, og installer.
-4. Åpne «Systemverktøy» og slå på de to tillatelsene appen ber om.
+4. Tillat installasjon fra Downloader første gang, og installer.
+5. **Slå Play Protect på igjen.**
+6. Åpne «Systemverktøy» og slå på de to tillatelsene appen ber om.
+
+Samme fremgangsmåte ved hver oppdatering. Appen må alltid signeres med samme nøkkel, ellers må den avinstalleres først (og historikken går tapt).

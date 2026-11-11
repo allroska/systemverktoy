@@ -43,6 +43,9 @@ Les **`docs/SPEC.md`** før du gjør noe. Den beskriver hva som skal bygges og p
   - Varsellytteren (`NotificationListenerService`) er appens «alltid på»-del. Registrer `ACTION_DREAMING_STARTED/STOPPED`- og skjerm-på/av-mottakere **dynamisk i tjenesten** (de kan ikke registreres i manifestet). Lytt på `MediaSessionManager.addOnActiveSessionsChangedListener` med lytterens `ComponentName`, og på `MediaController.Callback` for hver sesjon.
   - Logg `onListenerConnected` / `onListenerDisconnected` som egne hendelser. Ved frakobling: `requestRebind`.
   - Periodisk kopiering av `UsageEvents` til databasen med WorkManager (hvert 15.–60. minutt) og når appen åpnes. Ikke dupliser hendelser.
+  - **Hjerteslag:** mens skjermen er på, skriv en `APP`-hendelse «heartbeat» omtrent hvert 15. minutt (fra lytteren eller WorkManager). Hull i hjerteslagene skal kunne vises som «Ukjent».
+  - **Oppstart:** en `BOOT_COMPLETED`-mottaker (`RECEIVE_BOOT_COMPLETED`) som logger oppstart, planlegger WorkManager-jobben på nytt og ber om rebind av lytteren.
+  - **Strømsparing:** diagnoseskjermen viser om appen er unntatt fra batterioptimalisering (`PowerManager.isIgnoringBatteryOptimizations`). Ikke be om unntak automatisk; om testene viser at det trengs, gjøres det manuelt.
   - Appen skal aldri krasje hvis en tillatelse mangler – vis oppsettskjermen i stedet.
 - **Logikk som kan testes uten TV skal være ren Kotlin** (f.eks. en `TimelineBuilder` som tar rå hendelser inn og gir perioder ut), med enhetstester for reglene i SPEC kap. 4: per-activity-økter, startskjerm teller ikke, skjermsparer = IDLE, pause = APP_OPEN, hull = UNKNOWN, dagsgrense ved midnatt og sommertid-overgang.
 - **Tid:** bruk `java.time` og systemets tidssone. Ikke hardkod UTC-offset.

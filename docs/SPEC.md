@@ -121,10 +121,10 @@ Formål: finne ut hva denne TV-en faktisk logger, før klassifiseringen bygges. 
 Krav:
 - Samme navn, ikon, applicationId og signering som den ferdige appen (så fase 2 kan installeres oppå uten å miste data).
 - Oppsettskjermen (5.4).
-- En **diagnoseboks** øverst: status for begge tillatelser, om varsellytteren er tilkoblet nå, valgt skjermsparer-komponent (`Settings.Secure` `screensaver_components`), launcher-pakke, eldste hendelse i Androids logg, antall rader i egen database.
+- En **diagnoseboks** øverst: status for begge tillatelser, om varsellytteren er tilkoblet nå, tidspunkt for siste hjerteslag, om appen er unntatt fra batterioptimalisering, valgt skjermsparer-komponent (`Settings.Secure` `screensaver_components`), launcher-pakke, eldste hendelse i Androids logg, antall rader i egen database.
 - En **rå logg** for valgt dag, nyeste øverst, én rad per hendelse: klokkeslett (sekunder), kilde (`USAGE` / `MEDIA` / `DREAM` / `AUDIO` / `LISTENER` / `APP`), pakkenavn, activity-klasse der den finnes, hendelsestype, og for MEDIA: status og eventuell tittel.
 - Venstre/høyre bytter dag. Teksten må være lesbar på et fotografi tatt av TV-skjermen.
-- Logging skal skje kontinuerlig i bakgrunnen, ikke bare når appen er åpen.
+- Logging skal skje kontinuerlig i bakgrunnen, ikke bare når appen er åpen. Tre tiltak for å holde den i gang og gjøre bortfall synlig: **hjerteslag** ca. hvert 15. minutt mens skjermen er på, **start ved oppstart** av TV-en, og **visning av strømsparingsstatus** (se AGENTS.md, «Bakgrunn»).
 
 ### Fase 2 – Ferdig app
 Skjermene i kapittel 5 med klassifiseringen i kapittel 4, justert etter funnene fra fase 1. Rå logg beholdes som en skjult diagnoseskjerm (f.eks. holde OK inne på overskriften i 3 sekunder).

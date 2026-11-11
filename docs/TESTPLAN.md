@@ -19,6 +19,8 @@ Forberedelse: slå av **autoforhåndsvisning** i Netflix-profilen som skal bruke
 | 11 | Konsoll/TV-kanal | Bytt til HDMI-inngangen (spillkonsoll) og evt. en vanlig TV-kanal | Hvilken pakke tiden havner på |
 | 12 | Oppdatering | Når en ny versjon er ute: installer oppå via Downloader | Gammel logg er fortsatt der |
 | 13 | Historikk | Etter 14 dager | Hvor gammel er eldste hendelse i Androids logg (forventet ca. 10 dager)? Har appens egen database eldre data? |
+| 14 | Play Protect | Slå Play Protect på igjen etter installasjon og vent et døgn | Blir appen flagget, deaktivert eller fjernet? |
+| 15 | Hjerteslag | Se på diagnoseboksen etter noen timer med TV-en på | Siste hjerteslag er under ca. 15 min gammelt; ingen uforklarte hull |
 
 ## Resultat
 
@@ -39,3 +41,5 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | 11 | | |
 | 12 | | |
 | 13 | | |
+| 14 | | |
+| 15 | | |

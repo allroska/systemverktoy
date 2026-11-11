@@ -59,6 +59,7 @@ Oppsummert fra research gjort før prosjektstart (november 2026). Status:
 | «Downloader» (AFTVnews) finnes i Play Store på Google TV; tillatelsen «Installer ukjente apper» gis per app | Bekreftet |
 | En oppdatering installeres bare hvis den er signert med samme nøkkel som installert versjon – ellers må appen avinstalleres og data går tapt | Bekreftet |
 | Debug-nøkler fra GitHub Actions er nye ved hver kjøring → må bruke fast nøkkel fra Secrets | Bekreftet |
+| Play Protect **blokkerte** installasjonen av versjon 1.0.4 («Appen er blokkert for å beskytte enheten din») fordi appen ber om tilgang til bruksdata og varsler. Installasjon gikk når skanningen ble slått av midlertidig. Reservevei: `adb install` fra PC. | Bekreftet (sett på TV-en, 11. nov. 2026) |
 | Googles krav om verifiserte utviklere for sideinstallerte apper gjelder foreløpig bare mobil/nettbrett i utvalgte land; planlagt utvidet globalt i 2027. Reserveveier: gratis «limited distribution»-konto, avansert flyt, eller adb. | Bekreftet (Google, nov. 2026) |
 | AGP 9.4.x krever Gradle 9.6.0 og JDK 17; Kotlin er innebygd i AGP 9 | Bekreftet |
 
