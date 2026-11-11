@@ -51,3 +51,31 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | 17 | | |
 | 18 | | |
 | 19 | | |
+
+## Fase 2 – skjermer (PR B)
+
+1. Installer oppå dagens versjon. Kontroller at gammel rålogg er beholdt. «I dag»
+   skal vise tre oppsummeringskort, egen App åpen-/HDMI-sum, døgnstripe og tidslinje.
+   Systemverktøy selv skal ikke vises som periode eller inngå i summer.
+2. Første rad skal ha en hvit fokusramme. Opp/ned flytter mellom radene og blar
+   listen. Venstre/høyre velger dag, uten å gå lenger frem enn i dag. Kontroller
+   både 720p og 1080p og gjerne stor systemskrift.
+3. Trykk OK på en Netflix-rad. Hele sammenhengende appøkten skal vises med fordeling,
+   «Hva skjedde», tittel/forklaring og «Grunnlag – rå signaler». Tilbake-knappen skal
+   ha fokus. Ned velger venstre liste; høyre velger råsignalene. Opp/ned blar. Tilbake
+   med fjernkontrollen går til samme rad og rulleposisjon i tidslinjen. Prøv en rad
+   langt nede på en dag med mange perioder.
+4. Velg en dag med et kjent hjerteslagshull eller lytterfrakobling. Se «Ufullstendig
+   dag» og en oransje, skravert Ukjent-periode. Ved avkortet grunnlag kan et eget
+   «Begrenset grunnlag»-varsel vises; dette er ikke påstått som et kjent logghull.
+5. Trykk opp fra første rad til overskriften. Kort OK skal ikke åpne råloggen.
+   Hold OK i tre sekunder: diagnoseskjermen åpnes med filterknappen i fokus. Kontroller
+   filter, dagbytte og Kanal +/− som før. Tilbake gjenoppretter tidslinjens posisjon
+   og sist valgte rad.
+6. La «I dag» være åpen over midnatt. Dato, summer, stripe og rader skal bytte til ny
+   dag uten å åpne appen igjen. En uttrykkelig valgt historisk dato skal stå fast.
+7. Slå av én tillatelse i TV-innstillingene. Oppsett skal vises uten krasj, med første
+   manglende tillatelsesknapp i fokus. Når begge er på, skal «I dag» åpnes.
+8. Kontroller en dag med aktivitet over midnatt, avslag og nytt påslag om ettermiddagen:
+   «Første gang slått på» skal vise 00:00. Vanlig standby før dagen skal ikke alene
+   gi «Begrenset grunnlag»; skjermsparerens skjerm-av-signal er ikke et slikt grunnlag.

@@ -16,6 +16,14 @@ import java.time.ZoneId
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32], application = Application::class)
 class EventDatabaseTest {
+    @Test fun `timeline query is ordered and bounded including the lookahead endpoint`() = runBlocking {
+        Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EventDatabase::class.java).build().withClose { db ->
+            db.events().insert(listOf(9L, 10L, 20L, 21L).map { RawEvent(time = it, source = Source.APP, type = "heartbeat") })
+            assertEquals(listOf(10L, 20L), db.events().timelineRange(10, 20).first().map { it.time })
+            assertEquals(9L, db.events().oldest().first())
+        }
+    }
+
     @Test fun `database ignores reimports even after reopening and preserves other activities`() = runBlocking {
         val context = RuntimeEnvironment.getApplication()
         val name = "dedup-test.db"

@@ -23,6 +23,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -49,7 +51,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { SystemverktoyTheme { DiagnosticApp() } }
+        setContent { SystemverktoyTheme { TimelineApp() } }
     }
 
     override fun onResume() {
@@ -61,52 +63,39 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun DiagnosticApp() {
+internal fun SetupScreen(access: Access) {
     val context = LocalContext.current
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var access by remember { mutableStateOf(Access.read(context)) }
-    var zone by remember { mutableStateOf(ZoneId.systemDefault()) }
-    var today by remember { mutableStateOf(LocalDate.now(zone)) }
     var error by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                access = Access.read(context)
-                zone = ZoneId.systemDefault()
-                today = LocalDate.now(zone)
-                delay(2000)
-            }
+    val firstFocus = remember { FocusRequester() }
+    val inputMode = LocalInputModeManager.current
+    LaunchedEffect(access) { inputMode.requestInputMode(InputMode.Keyboard); firstFocus.requestFocus() }
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("To tillatelser må slås på", fontSize = 28.sp, color = MaterialTheme.colorScheme.onBackground)
+        Text("Finn «Systemverktøy» i listen. Slå bryteren på, og trykk Tilbake.", fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
+        PermissionRow("1. Brukstilgang", "Viser hvilke apper som har vært åpne, og når.", access.usage,
+            if (!access.usage) Modifier.focusRequester(firstFocus) else Modifier) {
+            error = openSettings(context, Settings.ACTION_USAGE_ACCESS_SETTINGS)
         }
-    }
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp, 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (!access.ready) {
-            Text("To tillatelser må slås på", fontSize = 28.sp)
-            Text("Finn «Systemverktøy» i listen. Slå bryteren på, og trykk Tilbake.", fontSize = 18.sp)
-            PermissionRow("1. Brukstilgang", "Viser hvilke apper som har vært åpne, og når.", access.usage) {
-                error = openSettings(context, Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            }
-            PermissionRow("2. Tilgang til varsler", "Viser avspilling og pause.", access.notifications) {
-                error = openSettings(context, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-            }
-            error?.let { Text(it, fontSize = 17.sp) }
-            Text("Ingenting sendes ut av TV-en. All logg lagres bare her.", fontSize = 17.sp)
-        } else {
-            RawLog(access, today, zone)
+        PermissionRow("2. Tilgang til varsler", "Viser avspilling og pause.", access.notifications,
+            if (access.usage) Modifier.focusRequester(firstFocus) else Modifier) {
+            error = openSettings(context, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
         }
+        error?.let { Text(it, fontSize = 17.sp, color = MaterialTheme.colorScheme.onBackground) }
+        Text("Ingenting sendes ut av TV-en. All logg lagres bare her.", fontSize = 17.sp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
 @Composable
-private fun PermissionRow(title: String, explanation: String, enabled: Boolean, open: () -> Unit) {
+private fun PermissionRow(title: String, explanation: String, enabled: Boolean, modifier: Modifier = Modifier, open: () -> Unit) {
     Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(20.dp),
         horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, fontSize = 22.sp)
-            Text(explanation, fontSize = 17.sp)
+            Text(title, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(explanation, fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (enabled) Text("Slått på", color = Color(0xFF8FD6A6), fontSize = 18.sp)
-        else Button(onClick = open) { Text("Åpne innstillinger", fontSize = 18.sp) }
+        else Button(onClick = open, modifier = modifier) { Text("Åpne innstillinger", fontSize = 18.sp) }
     }
 }
 
@@ -125,11 +114,11 @@ private fun openSettings(context: android.content.Context, action: String): Stri
 }
 
 @Composable
-private fun RawLog(access: Access, today: LocalDate, zone: ZoneId) {
+internal fun RawLog(access: Access, today: LocalDate, zone: ZoneId, initialDay: LocalDate = today) {
     val context = LocalContext.current
     val repo = context.repository
-    var selected by rememberSaveable { mutableStateOf(today.toString()) }
-    val day = minOf(LocalDate.parse(selected), today)
+    var selected by rememberSaveable { mutableStateOf(initialDay.takeUnless { it == today }?.toString()) }
+    val day = selectedDay(selected, today)
     val bounds = remember(day, zone) { dayBounds(day, zone) }
     val dayFlow = remember(bounds) { repo.dao.day(bounds.start, bounds.endExclusive) }
     val events by key(bounds) { dayFlow.collectAsStateWithLifecycle(emptyList()) }
@@ -148,7 +137,8 @@ private fun RawLog(access: Access, today: LocalDate, zone: ZoneId) {
     }
     val scope = rememberCoroutineScope()
     val filterFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { filterFocus.requestFocus() }
+    val inputMode = LocalInputModeManager.current
+    LaunchedEffect(Unit) { inputMode.requestInputMode(InputMode.Keyboard); filterFocus.requestFocus() }
     // Reset on raw input as well: a newly collected, filtered-out event must also return to the top.
     LaunchedEffect(day, events, importantOnly) { listState.scrollToItem(0) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { listState.requestScrollToItem(0) }
@@ -160,8 +150,8 @@ private fun RawLog(access: Access, today: LocalDate, zone: ZoneId) {
         disabledContainerColor = MaterialTheme.colorScheme.background,
         disabledContentColor = Color.White,
     )
-    fun move(days: Long) { selected = minOf(day.plusDays(days), today).toString() }
-    Column(Modifier.fillMaxSize().onPreviewKeyEvent {
+    fun move(days: Long) { selected = shiftedDay(selected, today, days) }
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp, 16.dp).onPreviewKeyEvent {
         val direction = when (it.key) { Key.DirectionLeft -> -1L; Key.DirectionRight -> 1L; else -> null }
         val page = when (it.nativeKeyEvent.keyCode) {
             android.view.KeyEvent.KEYCODE_CHANNEL_UP, android.view.KeyEvent.KEYCODE_PAGE_UP -> -1
