@@ -23,6 +23,10 @@ Les `docs/SPEC.md` (hva som skal bygges og hvorfor), `AGENTS.md` (tekniske regle
 
 Ikke bruk tid på formatering, navnevalg eller stilpreferanser som ikke påvirker punktene over.
 
+## Når noe er «Må fikses»
+
+Bruk «Må fikses» bare for: krasj, tap av data, feil signering/identitet, data ut av TV-en, eller feil svar på hovedskjermen i vanlig daglig bruk. Alt annet er «Bør fikses» eller «Kan vente». Eieren merger etter maks én retterunde per PR; resten samles i neste oppgave. Ved re-review: ikke løft nye «Kan vente»-punkter til «Må fikses».
+
 ## Hvordan reviewen skal se ut
 
 Skriv på **norsk**, i vanlig språk. Forklar tekniske begreper kort første gang de brukes.

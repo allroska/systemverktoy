@@ -2,6 +2,8 @@
 
 Lim inn én oppgave om gangen i Codex (chatgpt.com/codex), med repoet `systemverktoy` valgt. Vent til PR-en er merget før du starter neste.
 
+**Regel:** bare «Må fikses» stopper en merge, og maks én retterunde per PR. «Bør fikses» og «Kan vente» samles i neste oppgave.
+
 Flyten for hver oppgave:
 1. Lim inn oppgaven i Codex (nivå **Høy** for store oppgaver) → Codex lager en branch og åpner PR-en selv.
 2. Claude reviewer PR-en automatisk (3–10 minutter).
