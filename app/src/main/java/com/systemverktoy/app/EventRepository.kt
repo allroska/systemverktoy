@@ -12,10 +12,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
 
-class EventRepository(private val context: Context) {
-    private val database = Room.databaseBuilder(context, EventDatabase::class.java, "raw-events.db").build()
+class EventRepository(
+    private val context: Context,
+    private val database: EventDatabase = Room.databaseBuilder(context, EventDatabase::class.java, "raw-events.db").build(),
+) {
     val dao = database.events()
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, error ->
         Log.e("Systemverktoy", "Could not save raw event", error)
@@ -35,20 +36,21 @@ class EventRepository(private val context: Context) {
         if (!context.getSystemService(PowerManager::class.java).isInteractive) return@withLock
         val now = System.currentTimeMillis()
         val last = dao.lastHeartbeat()
-        if (last == null || now < last || now - last >= Duration.ofMinutes(15).toMillis()) {
+        if (heartbeatDue(last, now)) {
             dao.insert(listOf(RawEvent(time = now, source = Source.APP, type = "heartbeat")))
         }
     }
 
-    // Re-read the retention window: Android can expose events several minutes late.
-    // No advancing watermark can safely exclude them. The unique index handles overlap,
-    // process death and simultaneous foreground/background import requests.
+    // Persist the successful query end, with overlap for delayed Android events.
+    // Advance only after the transaction commits; replay after a crash is harmless.
     suspend fun copyUsage() = importLock.withLock {
         if (!Access.read(context).usage) return@withLock
-        val end = System.currentTimeMillis()
+        val window = usageWindow(System.currentTimeMillis(),
+            preferences.getLong("usageCopiedThrough", 0).takeIf { it > 0 },
+            preferences.getLong("usageFullScan", 0).takeIf { it > 0 })
         val events = try {
             context.getSystemService(UsageStatsManager::class.java)
-                .queryEvents(end - Duration.ofDays(14).toMillis(), end)
+                .queryEvents(window.start, window.end)
         } catch (_: SecurityException) {
             log(Source.APP, "USAGE_ACCESS_REVOKED")
             return@withLock
@@ -70,8 +72,14 @@ class EventRepository(private val context: Context) {
             }
             dao.insert(batch)
         }
-        oldestUsage.value = oldest
-        preferences.edit { putLong("oldestUsage", oldest ?: 0) }
+        if (window.full) oldestUsage.value = oldest
+        preferences.edit(commit = true) {
+            putLong("usageCopiedThrough", window.end)
+            if (window.full) {
+                putLong("usageFullScan", window.end)
+                putLong("oldestUsage", oldest ?: 0)
+            }
+        }
     }
 }
 

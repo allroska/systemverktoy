@@ -18,8 +18,8 @@ class SystemverktoyApplication : Application() {
 
 class CollectorWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
-        applicationContext.repository.copyUsage()
         applicationContext.repository.heartbeat()
+        applicationContext.repository.copyUsage()
         Result.success()
     } catch (cancelled: kotlinx.coroutines.CancellationException) {
         throw cancelled
@@ -37,7 +37,7 @@ class CollectorWorker(context: Context, parameters: WorkerParameters) : Coroutin
         }
         fun now(context: Context) {
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "usage-now", ExistingWorkPolicy.APPEND_OR_REPLACE,
+                "usage-now", ExistingWorkPolicy.KEEP,
                 OneTimeWorkRequestBuilder<CollectorWorker>().build(),
             )
         }

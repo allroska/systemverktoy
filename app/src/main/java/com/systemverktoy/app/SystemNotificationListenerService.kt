@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 class SystemNotificationListenerService : NotificationListenerService() {
     private val handler = Handler(Looper.getMainLooper())
     private val controllers = mutableMapOf<MediaSession.Token, Pair<MediaController, MediaController.Callback>>()
+    private val changes = PlaybackChanges<MediaSession.Token>()
     private val sessions by lazy { getSystemService(MediaSessionManager::class.java) }
     private val audio by lazy { getSystemService(AudioManager::class.java) }
     private var receiverRegistered = false
@@ -42,7 +43,7 @@ class SystemNotificationListenerService : NotificationListenerService() {
         override fun run() {
             repository.scope.launch { repository.heartbeat() }
             CollectorWorker.now(this@SystemNotificationListenerService)
-            handler.postDelayed(this, 15 * 60 * 1000L)
+            handler.postDelayed(this, HEARTBEAT_INTERVAL_MILLIS)
         }
     }
 
@@ -111,13 +112,16 @@ class SystemNotificationListenerService : NotificationListenerService() {
 
     private fun snapshot(controller: MediaController, type: String, state: PlaybackState?, metadata: MediaMetadata?) {
         val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)?.takeIf { it.isNotBlank() }
-            ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
-        repository.log(Source.MEDIA, type, controller.packageName,
-            playbackState(state?.state), title)
+            ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)?.takeIf { it.isNotBlank() }
+        val changed = changes.mediaChanged(controller.sessionToken, MediaState(state?.state, title))
+        if (type == "SESSION_ADDED" || changed) {
+            repository.log(Source.MEDIA, type, controller.packageName, playbackState(state?.state), title)
+        }
     }
 
     private fun removeSession(token: MediaSession.Token, type: String) {
         val (controller, callback) = controllers.remove(token) ?: return
+        changes.remove(token)
         repository.log(Source.MEDIA, type, controller.packageName)
         guarded { controller.unregisterCallback(callback) }
     }
@@ -125,13 +129,16 @@ class SystemNotificationListenerService : NotificationListenerService() {
     private fun logAudio(configs: List<AudioPlaybackConfiguration>) {
         // Android exposes only active, anonymized configurations to this app.
         val media = configs.filter { it.audioAttributes.usage == AudioAttributes.USAGE_MEDIA }
-        repository.log(Source.AUDIO, "PLAYBACK_CONFIG_CHANGED", state = "media_active=${media.size}; " +
-            media.joinToString { "usage=${it.audioAttributes.usage}, content=${it.audioAttributes.contentType}" })
+        val state = "media_active=${media.size}; " + media.map {
+            "usage=${it.audioAttributes.usage}, content=${it.audioAttributes.contentType}"
+        }.sorted().joinToString()
+        if (changes.audioChanged(state)) repository.log(Source.AUDIO, "PLAYBACK_CONFIG_CHANGED", state = state)
     }
 
     private fun stopCollectors() {
         handler.removeCallbacks(pulse)
         controllers.keys.toList().forEach { removeSession(it, "SESSION_UNOBSERVED") }
+        changes.clear()
         if (sessionsRegistered) guarded { sessions.removeOnActiveSessionsChangedListener(sessionListener) }
         if (audioRegistered) guarded { audio.unregisterAudioPlaybackCallback(audioCallback) }
         if (receiverRegistered) guarded { unregisterReceiver(receiver) }
