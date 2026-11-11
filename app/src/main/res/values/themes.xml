@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Systemverktoy" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowBackground">#0F1317</item>
+        <item name="android:colorAccent">#EEF1F4</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:navigationBarColor">#0F1317</item>
+    </style>
+</resources>
