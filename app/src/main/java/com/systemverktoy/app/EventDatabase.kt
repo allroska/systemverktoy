@@ -26,6 +26,12 @@ interface EventDao {
     @Query("SELECT * FROM raw_events WHERE time >= :start AND time < :end ORDER BY time DESC, id DESC")
     fun day(start: Long, end: Long): Flow<List<RawEvent>>
 
+    @Query("SELECT * FROM raw_events WHERE time >= :start AND time <= :end ORDER BY time, id")
+    fun timelineRange(start: Long, end: Long): Flow<List<RawEvent>>
+
+    @Query("SELECT MIN(time) FROM raw_events")
+    fun oldest(): Flow<Long?>
+
     @Query("SELECT COUNT(*) FROM raw_events")
     fun count(): Flow<Long>
 

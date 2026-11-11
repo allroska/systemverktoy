@@ -61,5 +61,39 @@ fortsatt UNKNOWN også uten kjent app.
   siste sesjonssignal per pakke; samtidige sesjoner i samme app kan ikke skilles
   sikkert i eksisterende data.
 
-SPEC er ikke endret. Skjermene og innkobling i dagvisningen hører til PR B
-etter at eieren har merget PR A.
+## Dagvisning (PR B)
+
+- Databasen leses fra maksimalt 48 timer før lokal dagsstart til to minutter etter
+  dagens slutt. De to minuttene gir kort etterfølgende grunnlag for 30-/60-sekunders-
+  reglene over midnatt. Hendelser etter nå brukes aldri. Beregningen skjer utenfor
+  UI-tråden og oppdateres mens skjermen er åpen.
+- Innen dette vinduet kortes input videre ned fra siste DEVICE_STARTUP eller
+  DEVICE_SHUTDOWN før dagen. Siste tidligere lytterstatus beholdes, siden en
+  oppstart ikke beviser at lytteren er tilkoblet. BOOT_COMPLETED brukes ikke som
+  avkortingspunkt: den kan komme etter at Netflix allerede spiller.
+- Systemverktøys egne perioder filtreres bort etter beregningen, fra både tidslinje,
+  døgnstripe og alle summer. Derved forlenges ikke appen som var i forgrunnen før
+  Systemverktøy. Råhendelser og klassifiseringsregler endres ikke.
+- Detaljer samler tilstøtende perioder for samme app. Det slås ikke sammen over
+  hull, avslag, en annen app eller skjult bruk av Systemverktøy. Råsignalene beholder
+  opprinnelige tider, også når grunnlaget kommer fra før økten eller dagen.
+- «I dag» følger klokken over midnatt; en valgt historisk dato står fast. Venstre/
+  høyre bytter dag. Første tidslinjerad får fokus; på en tom dag får overskriften
+  fokus. Opp fra første rad går til overskriften. Hold OK der i tre sekunder for
+  råloggen; slipp eller flytt fokus før tiden for å avbryte. Tilbake går til tidslinjen.
+
+### Åpne spørsmål / antakelser for visningen
+
+- Ved avkorting på 48 timer uten en oppstart/nedstengning kan eldre tilstand mangle.
+  Dette vises som «Begrenset grunnlag», uten å påstå at det er et kjent logghull.
+- To minutters etterfølgende data dekker korte avbrudd og avspillingsfilteret.
+  En lang innledende BUFFERING som først får PLAYING langt senere, kan dermed
+  forbli APP_OPEN i en tidligere dags visning. Det finnes ingen komplett råeksport
+  som fastsetter en øvre grense for slik oppstartsbufring.
+- «Første gang slått på» viser registrert på-signal, eller 00:00 hvis kjent aktivitet
+  allerede pågår ved dagsstart. Uten et slikt grunnlag vises «—». Manglende eller
+  avkortet historikk omtales særskilt; en dag før lagret historikk erklæres ikke ubrukt.
+- Døgnstripen følger skissen 06–24. Summer og tidslinje omfatter likevel hele lokale
+  døgnet, inkludert aktivitet før 06 og sommertidsoverganger.
+
+SPEC er ikke endret av PR B.
