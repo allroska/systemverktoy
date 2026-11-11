@@ -34,6 +34,7 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
     val heading = remember { FocusRequester() }
     val footer = remember { FocusRequester() }
     val restored = remember { FocusRequester() }
+    val count = sessions.count { !it.unknown }
     val target = sessions.indexOfFirst { it.start == focusedAnchor }.coerceAtLeast(0)
     val inputMode = LocalInputModeManager.current
     val blue = Color(0xFF4E95F0)
@@ -71,7 +72,7 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
             horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(if (day == today) "TV-titting i dag" else "TV-titting", fontSize = 16.sp, color = muted)
             Text(durationText(report.total(Category.WATCHING)), fontSize = 44.sp, color = blue)
-            Text("${sessions.count { !it.unknown }} økter · første påslag ${firstOnText(report, zone)}", fontSize = 15.sp, color = muted)
+            Text("${if (count == 1) "1 økt" else "$count økter"} · første påslag ${firstOnText(report, zone)}", fontSize = 15.sp, color = muted)
         }
         monitoringText(report, day, zone)?.let { Text(it, fontSize = 11.sp, color = muted) }
         if (report.limitedContext) Text("Begrenset grunnlag: eldre tilstand kan mangle.", fontSize = 11.sp, color = muted)
@@ -103,8 +104,8 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
                     Box(Modifier.weight(1f).height(8.dp).background(Color(0xFF2B3640), shape)) {
                         if (!session.unknown) Box(Modifier.fillMaxHeight().fillMaxWidth(session.cumulative).background(blue, shape))
                     }
-                    Text(if (session.unknown) "avspilling ukjent" else "${session.watching / 60_000} min", fontSize = 15.sp,
-                        color = if (session.unknown) muted else Color.White, modifier = Modifier.width(if (session.unknown) 142.dp else 76.dp))
+                    Text(if (session.unknown) "avspilling ukjent" else durationText(session.watching), fontSize = 15.sp,
+                        color = if (session.unknown) muted else Color.White, modifier = Modifier.width(if (session.unknown) 142.dp else 100.dp))
                 }
             }
         }

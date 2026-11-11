@@ -17,6 +17,44 @@ import org.robolectric.annotation.Config
 @OptIn(ExperimentalTestApi::class)
 class PinGateTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun `numeric entry masks filled places and cannot submit only three digits`() {
+        val store = PinStore(RuntimeEnvironment.getApplication())
+        store.reset()
+        compose.setContent { SystemverktoyTheme { PinGate { androidx.tv.material3.Text("Beskyttet innhold") } } }
+        repeat(4) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("○") }
+        compose.onRoot().performKeyInput { pressKey(Key.One); pressKey(Key.Two); pressKey(Key.Three) }
+        repeat(3) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("●") }
+        compose.onNodeWithTag("pin-digit-3").assertTextEquals("○")
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.onNodeWithText("Tast alle fire sifrene.").assertExists()
+        compose.onNodeWithText("Velg PIN-kode").assertExists()
+        org.junit.Assert.assertFalse(store.configured)
+        compose.onRoot().performKeyInput { pressKey(Key.Four) }
+        repeat(4) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("●") }
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.onNodeWithText("Gjenta PIN-koden").assertExists()
+        repeat(4) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("○") }
+        store.reset()
+    }
+    @Test fun `arrows reveal only the current digit and mask it when moving away`() {
+        val store = PinStore(RuntimeEnvironment.getApplication())
+        store.reset()
+        compose.setContent { SystemverktoyTheme { PinGate { androidx.tv.material3.Text("Beskyttet innhold") } } }
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.onNodeWithTag("pin-digit-0").assertTextEquals("1")
+        compose.onNodeWithTag("pin-digit-1").assertTextEquals("○")
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithTag("pin-digit-0").assertTextEquals("●")
+        compose.onNodeWithTag("pin-digit-1").assertTextEquals("0")
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft); pressKey(Key.DirectionDown) }
+        compose.onNodeWithTag("pin-digit-0").assertTextEquals("0")
+        compose.onNodeWithTag("pin-digit-1").assertTextEquals("●")
+        compose.onNodeWithTag("pin-digit-2").assertTextEquals("○")
+        compose.onRoot().performKeyInput { pressKey(Key.Four) }
+        compose.onNodeWithTag("pin-digit-0").assertTextEquals("●")
+        compose.onNodeWithTag("pin-digit-1").assertTextEquals("●")
+        store.reset()
+    }
     @Test fun `arrows and numbers unlock but background locks the protected content again`() {
         val store = PinStore(RuntimeEnvironment.getApplication())
         store.reset()

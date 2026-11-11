@@ -102,14 +102,17 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 
 1. Installer som oppdatering. Velg PIN med tallknapper og gjenta. Test også piler:
    hvert siffer starter på 0, opp/ned endrer det, venstre/høyre flytter, OK bekrefter.
-   Ulike bekreftelser skal kreve nytt valg. Sifrene skal alltid vises som prikker.
+   Ulike bekreftelser skal kreve nytt valg. Urørte plasser viser ○ og tastede viser ●.
+   Ved pilbruk vises sifferet under markøren; det skjules når markøren flyttes.
+   OK etter tre tastede sifre skal be om alle fire, uten å lagre en kode.
 2. Gå til startskjermen og tilbake: PIN kreves igjen, også fra detaljer/diagnose.
    Fem feil skal sperre i ett minutt; riktig kode skal virke etterpå. Loggingen
    skal fortsette mens appen er låst. Prøv adb-nullstilling fra README og kontroller
    at ny kode kan velges uten tap av historikk.
 3. Etter PIN vises Oversikt. Sammenlign sum med WATCHING i tidslinjen. Korte pauser
-   og turer til startskjermen på høyst fem minutter skal inngå i samme økt, men bare
-   avspilling gir minutter. En annen app med avspilling starter en ny økt.
+   og turer til startskjermen på samlet høyst fem minutter mellom avspillinger
+   skal inngå i samme økt, men bare avspilling gir minutter. Fire minutter pause
+   pluss fire minutter på startskjermen skal gi to økter. En annen app med avspilling starter en ny økt.
 4. Kontroller kumulative blå streker (siste er full), grå ukjente historiske økter,
    tom dag, HDMI-/inaktivsum, 720p/1080p og stor skrift. Opp/ned flytter fokus,
    OK viser hele økten, ned fra siste rad åpner tidslinjen.

@@ -33,13 +33,6 @@ class OverviewScreenTest {
             TimelineNavigation(day, day, start + 300_000, zone,
                 DayReport(rows, emptyList(), start, true, false, false), { it }, {}, state) { }
         } }
-        compose.runOnIdle {
-            val view = (compose as androidx.compose.ui.test.junit4.AndroidComposeTestRule<*, *>).activity.window.decorView
-            val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
-            view.draw(android.graphics.Canvas(bitmap))
-            java.io.File("../work/ui-overview.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-            bitmap.recycle()
-        }
         compose.onNodeWithText("Player").assertIsDisplayed().assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("Hva skjedde").assertExists()
         compose.onNodeWithTag("detail-back").assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }

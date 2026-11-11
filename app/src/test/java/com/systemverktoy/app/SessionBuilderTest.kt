@@ -18,6 +18,20 @@ class SessionBuilderTest {
         assertEquals(2, viewingSessions(listOf(row(0, 2), row(8, 10))).size)
         assertEquals(3, viewingSessions(listOf(row(0, 2), row(2, 3, pkg = "example.other"), row(3, 5))).size)
     }
+    @Test fun `pause and home are one combined interruption between watching periods`() {
+        for ((homeEnd, expected) in listOf(7 to 1, 10 to 2)) {
+            val rows = listOf(row(0, 2), row(2, 6, Category.APP_OPEN),
+                row(6, homeEnd, Category.HOME, "home"), row(homeEnd, homeEnd + 2))
+            val sessions = viewingSessions(rows)
+            assertEquals(expected, sessions.size)
+            assertEquals(240_000L, sessions.sumOf { it.watching })
+        }
+    }
+    @Test fun `returning to paused app does not restart the interruption clock`() {
+        val rows = listOf(row(0, 2), row(2, 4, Category.APP_OPEN), row(4, 6, Category.HOME, "home"),
+            row(6, 8, Category.APP_OPEN), row(8, 10))
+        assertEquals(2, viewingSessions(rows).size)
+    }
     @Test fun `long pause and a log hole split sessions`() {
         assertEquals(2, viewingSessions(listOf(row(0, 2), row(2, 8, Category.APP_OPEN), row(8, 10))).size)
         assertEquals(2, viewingSessions(listOf(row(0, 2), row(2, 3, Category.UNKNOWN, null), row(3, 5))).size)

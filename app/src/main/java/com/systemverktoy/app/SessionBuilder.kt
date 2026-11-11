@@ -18,6 +18,7 @@ internal fun viewingSessions(periods: List<TimelinePeriod>): List<ViewingSession
         if (pkg == null || first.category !in setOf(Category.APP_OPEN, Category.WATCHING) ||
             first.category == Category.APP_OPEN && !first.playbackUnknown && first.durationMillis > 300_000) { index++; continue }
         var last = index
+        var lastWatchingEnd = first.endExclusive.takeIf { first.category == Category.WATCHING }
         var scan = index + 1
         while (scan < rows.size) {
             val next = rows[scan]
@@ -25,9 +26,12 @@ internal fun viewingSessions(periods: List<TimelinePeriod>): List<ViewingSession
                 next.category == Category.WATCHING && next.packageName != pkg ||
                 next.playbackUnknown != first.playbackUnknown && next.packageName == pkg ||
                 next.category == Category.APP_OPEN && next.durationMillis > 300_000 && next.packageName == pkg ||
-                next.start - rows[last].endExclusive > 300_000) break
+                next.start - (lastWatchingEnd ?: rows[last].endExclusive) > 300_000) break
             if (next.packageName == pkg && next.category in setOf(Category.APP_OPEN, Category.WATCHING) &&
-                next.playbackUnknown == first.playbackUnknown) last = scan
+                next.playbackUnknown == first.playbackUnknown) {
+                last = scan
+                if (next.category == Category.WATCHING) lastWatchingEnd = next.endExclusive
+            }
             scan++
         }
         val session = ViewingSession(pkg, rows.subList(index, last + 1))

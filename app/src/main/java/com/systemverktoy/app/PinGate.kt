@@ -16,6 +16,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -79,6 +80,8 @@ internal fun PinGate(content: @Composable () -> Unit) {
 private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
     var confirmation by remember { mutableStateOf<String?>(null) }
     var digits by remember { mutableStateOf("0000") }
+    var enteredPlaces by remember { mutableStateOf(setOf<Int>()) }
+    var showCurrentDigit by remember { mutableStateOf(false) }
     var cursor by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -89,8 +92,9 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
     LaunchedEffect(Unit) { inputMode.requestInputMode(InputMode.Keyboard); focus.requestFocus(); while (true) { now = System.currentTimeMillis(); delay(250) } }
     fun submit() {
         if (busy || now < store.blockedUntil) return
+        if (enteredPlaces.size != 4) { message = "Tast alle fire sifrene."; return }
         val entered = digits
-        digits = "0000"; cursor = 0
+        digits = "0000"; cursor = 0; enteredPlaces = emptySet(); showCurrentDigit = false
         if (!store.configured && confirmation == null) { confirmation = entered; return }
         if (!store.configured && confirmation != entered) { confirmation = null; message = "Kodene var ulike. Prøv igjen."; return }
         busy = true
@@ -114,12 +118,23 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
                 Key.DirectionRight, Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
             if (handled && event.type == KeyEventType.KeyDown && !busy && now >= store.blockedUntil) {
                 when {
-                    digit != null -> { digits = digits.replaceRange(cursor, cursor + 1, digit.toString()); cursor = (cursor + 1).coerceAtMost(3) }
-                    event.key == Key.DirectionLeft -> cursor = (cursor - 1).coerceAtLeast(0)
-                    event.key == Key.DirectionRight -> cursor = (cursor + 1).coerceAtMost(3)
+                    digit != null -> {
+                        digits = digits.replaceRange(cursor, cursor + 1, digit.toString())
+                        enteredPlaces = enteredPlaces + cursor
+                        showCurrentDigit = false
+                        cursor = (cursor + 1).coerceAtMost(3)
+                    }
+                    event.key in listOf(Key.DirectionLeft, Key.DirectionRight) -> {
+                        enteredPlaces = enteredPlaces + cursor
+                        cursor = (cursor + if (event.key == Key.DirectionLeft) -1 else 1).coerceIn(0, 3)
+                        enteredPlaces = enteredPlaces + cursor
+                        showCurrentDigit = true
+                    }
                     event.key in listOf(Key.DirectionUp, Key.DirectionDown) -> {
                         val value = (digits[cursor].digitToInt() + if (event.key == Key.DirectionUp) 1 else 9) % 10
                         digits = digits.replaceRange(cursor, cursor + 1, value.toString())
+                        enteredPlaces = enteredPlaces + cursor
+                        showCurrentDigit = true
                     }
                     event.nativeKeyEvent.repeatCount == 0 -> submit()
                 }
@@ -128,7 +143,11 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
         }.focusable(), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Text(if (store.configured) "Tast PIN-kode" else if (confirmation == null) "Velg PIN-kode" else "Gjenta PIN-koden", fontSize = 28.sp, color = Color(0xFFEEF1F4))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            repeat(4) { i -> Text("●", color = Color(0xFFEEF1F4), fontSize = 32.sp, modifier = Modifier.border(2.dp,
+            repeat(4) { i -> Text(when {
+                i == cursor && showCurrentDigit -> digits[i].toString()
+                i in enteredPlaces -> "●"
+                else -> "○"
+            }, color = Color(0xFFEEF1F4), fontSize = 32.sp, modifier = Modifier.testTag("pin-digit-$i").border(2.dp,
                 if (i == cursor) Color.White else Color.Transparent).padding(16.dp)) }
         }
         Text("Tallknapper eller ↑ / ↓ endrer siffer fra 0 · ← / → flytter · OK bekrefter", fontSize = 16.sp, color = Color(0xFFEEF1F4))

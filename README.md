@@ -60,7 +60,9 @@ på nett og trenger ingen lagringstillatelse.
 ## PIN-kode
 
 Ved første åpning velger du fire sifre og gjentar dem. Bruk tallknappene, eller
-opp/ned for å endre siffer fra 0 og venstre/høyre for å flytte. OK bekrefter.
+opp/ned for å endre siffer fra 0 og venstre/høyre for å flytte. Urørte plasser
+vises som ○ og tastede som ●. Ved pilbruk vises sifferet under markøren til du
+flytter videre. OK bekrefter når alle fire plasser er fylt.
 PIN kreves igjen når appen har vært i bakgrunnen. Fem feil gir ett minutts pause;
 bakgrunnsloggingen fortsetter.
 
