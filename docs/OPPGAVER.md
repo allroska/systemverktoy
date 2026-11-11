@@ -64,6 +64,10 @@ Les AGENTS.md, docs/SPEC.md, docs/RESEARCH.md og resultatene i docs/TESTPLAN.md 
 2. Lag en ren Kotlin-TimelineBuilder som gjør rå hendelser om til perioder med kategoriene i SPEC kap. 4, justert etter testresultatene. Enhetstester for hver regel.
 3. Bygg skjermene i SPEC kap. 5 etter skissene i docs/skisser/: I dag, tidligere dager med hull-varsel, detaljer med «Grunnlag – rå signaler».
 4. Behold rå logg som skjult diagnoseskjerm.
+5. Ta med punktene Claude la til side i PR #2:
+   - «I dag» skal ikke stå fast over midnatt hvis appen står åpen.
+   - Første element skal ha fokus når en skjerm åpnes.
+   - Hvis TV-testen viser at pause ikke gir ny AUDIO-rad: lagre lydendringer også når teksten er lik, men bare når det har gått noen sekunder siden forrige rad.
 
 Del gjerne opp i flere PR-er (logikk først, så skjermer). Si fra under «Åpne spørsmål» hvis testresultatene gjør at en regel i SPEC bør endres – ikke endre SPEC-en stille.
 ```
