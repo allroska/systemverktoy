@@ -1,0 +1,51 @@
+# Claude reviewer hver pull request automatisk (uavhengig av Codex, som skriver koden).
+# Krever repository secret CLAUDE_CODE_OAUTH_TOKEN (lages med `claude setup-token`)
+# og at Claude GitHub App er installert på repoet (github.com/apps/claude).
+name: Claude review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Codex åpner og pusher PR-er via sin GitHub-app; uten dette avviser actionen bot-aktører.
+          allowed_bots: "*"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Du er uavhengig kodereviewer for denne pull requesten. Koden er skrevet av Codex.
+            Les CLAUDE.md (dine instrukser), docs/SPEC.md, AGENTS.md og docs/RESEARCH.md først.
+
+            1. Se endringene med `gh pr diff ${{ github.event.pull_request.number }}` og PR-beskrivelsen med `gh pr view ${{ github.event.pull_request.number }} --comments`.
+            2. Hvis det finnes en tidligere «## Claude-review»-kommentar, er dette en re-review: si hvilke funn som nå er rettet, og nevn bare nye eller gjenstående funn.
+            3. Legg inline-kommentarer på de konkrete linjene for funn under «Må fikses» med mcp__github_inline_comment__create_inline_comment.
+            4. Post én oppsummerende kommentar med `gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/review.md` (skriv filen med Write-verktøyet først) i formatet fra CLAUDE.md (norsk, vanlig språk, «Kan merges», «Må fikses», «Bør fikses», «Kan vente», «Sjekk på TV-en etter merge», «Til Codex»).
+
+            Du reviewer bare. Ikke endre filer, ikke push.
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write(//tmp/**),mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"

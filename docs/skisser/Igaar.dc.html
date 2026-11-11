@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<title>I går – tidslinje</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#A9CEFF}a:hover{color:#D4E7FF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; padding: 36px 56px; background: #0F1317; color: #EEF1F4; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px">
+
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <div style="display: flex; align-items: baseline; gap: 16px">
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700">I går</h1>
+      <span style="font-size: 20px; color: #A3ADB8">tirsdag 10. november</span>
+    </div>
+    <div style="display: flex; gap: 12px; font-size: 15px; color: #A3ADB8">
+      <span style="padding: 6px 12px; border: 1px solid #34404C; border-radius: 8px">‹ mandag</span>
+      <span style="padding: 6px 12px; border: 1px solid #34404C; border-radius: 8px">i dag ›</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <div style="background: #182028; border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 15px; color: #A3ADB8"><span style="width: 10px; height: 10px; border-radius: 5px; background: #4E95F0"></span>Sett på</div>
+      <div style="font-size: 32px; font-weight: 700">2 t 55 min</div>
+      <div style="font-size: 15px; color: #A3ADB8">NRK TV 2 t 10 · YouTube 45 min</div>
+    </div>
+    <div style="background: #182028; border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 15px; color: #A3ADB8"><span style="width: 10px; height: 10px; border-radius: 5px; background: #6B7682"></span>Sto bare på</div>
+      <div style="font-size: 32px; font-weight: 700">0 min</div>
+      <div style="font-size: 15px; color: #A3ADB8">Skjermspareren startet ikke</div>
+    </div>
+    <div style="background: #182028; border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 15px; color: #A3ADB8">Første gang slått på</div>
+      <div style="font-size: 32px; font-weight: 700">15:02</div>
+      <div style="font-size: 15px; color: #A3ADB8">Sist slått av 21:14</div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 12px; border: 1px solid #E8875F; background: rgba(232,135,95,0.10); font-size: 17px; color: #F4B79C">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B79C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"></path><path d="M12 10v5"></path><path d="M12 18h.01"></path></svg>
+    <span><strong style="color: #FFD3BF">Ufullstendig dag:</strong> ingen logg mellom 15:50 og 16:30. TV-en kan ha mistet strømmen, eller loggingen stoppet.</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="position: relative; height: 26px; background: #182028; border-radius: 6px; overflow: hidden">
+      <sc-for list="{{segs}}" as="seg" hint-placeholder-count="6">
+        <div style="{{seg.style}}"></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #A3ADB8; font-variant-numeric: tabular-nums">
+      <span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 4px">
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="6">
+      <div style="{{row.rowStyle}}">
+        <span style="width: 150px; font-size: 18px; color: #C9D1D9; font-variant-numeric: tabular-nums">{{row.time}}</span>
+        <span style="{{row.dotStyle}}"></span>
+        <span style="width: 190px; font-size: 19px; font-weight: 600">{{row.app}}</span>
+        <span style="{{row.chipStyle}}">{{row.label}}</span>
+        <span style="margin-left: auto; font-size: 18px; color: #C9D1D9; font-variant-numeric: tabular-nums">{{row.dur}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = {
+      play: { bar: '#4E95F0', bg: 'rgba(78,149,240,0.18)', fg: '#A9CEFF', border: 'transparent', label: 'Sett på' },
+      home: { bar: '#9AA4AF', bg: 'transparent', fg: '#C9D1D9', border: '#5B6672', label: 'Startskjerm – teller ikke' },
+      gap:  { bar: 'repeating-linear-gradient(45deg, #E8875F 0 4px, transparent 4px 8px)', bg: 'rgba(232,135,95,0.12)', fg: '#F4B79C', border: '#E8875F', label: 'Ukjent – mangler logg' }
+    };
+    var mins = function (t) { var p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]) - 360; };
+    var span = 1080;
+    var raw = [
+      ['15:02', '15:05', 'Startskjerm', 'home', '3 min'],
+      ['15:05', '15:50', 'YouTube', 'play', '45 min'],
+      ['15:50', '16:30', '?', 'gap', '40 min'],
+      ['19:00', '19:04', 'Startskjerm', 'home', '4 min'],
+      ['19:04', '21:14', 'NRK TV', 'play', '2 t 10 min'],
+      ['21:14', '', 'TV slått av', 'home', '']
+    ];
+    var segs = raw.filter(function (r) { return r[1]; }).map(function (r) {
+      var c = C[r[3]], a = mins(r[0]), b = mins(r[1]);
+      return { style: 'position: absolute; top: 0; bottom: 0; left: ' + (a / span * 100) + '%; width: ' + Math.max((b - a) / span * 100, 0.3) + '%; background: ' + c.bar };
+    });
+    var rows = raw.map(function (r, i) {
+      var c = C[r[3]];
+      var off = r[2] === 'TV slått av';
+      return {
+        time: off ? r[0] : r[0] + ' – ' + r[1],
+        app: r[2],
+        dur: r[4],
+        label: off ? 'Av' : c.label,
+        rowStyle: 'display: flex; align-items: center; gap: 16px; height: 42px; padding: 0 16px; border-radius: 10px; box-sizing: border-box; background: transparent',
+        dotStyle: 'width: 12px; height: 12px; border-radius: 6px; flex-shrink: 0; background: ' + (off ? '#34404C' : (r[3] === 'gap' ? '#E8875F' : c.bar)),
+        chipStyle: 'font-size: 15px; font-weight: 500; padding: 4px 12px; border-radius: 999px; background: ' + (off ? 'transparent' : c.bg) + '; color: ' + c.fg + '; border: 1px dashed ' + (off ? '#34404C' : c.border)
+      };
+    });
+    return { segs: segs, rows: rows };
+  }
+}
+</script>
+</body>
+</html>

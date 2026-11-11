@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<title>Første oppstart – tillatelser</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#A9CEFF}a:hover{color:#D4E7FF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; padding: 64px 120px; background: #0F1317; color: #EEF1F4; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <h1 style="margin: 0; font-size: 38px; font-weight: 700">To tillatelser må slås på</h1>
+    <p style="margin: 0; font-size: 20px; line-height: 1.5; color: #A3ADB8; max-width: 860px">Dette gjøres bare én gang. Når begge er på, åpner appen rett på dagens tidslinje.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 24px; padding: 22px 28px; background: #182028; border-radius: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto">
+        <span style="font-size: 22px; font-weight: 600">1. Brukstilgang</span>
+        <span style="font-size: 17px; color: #A3ADB8">Viser hvilke apper som har vært åpne, og når.</span>
+      </div>
+      <span style="display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; color: #8FD6A6">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FD6A6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+        Slått på
+      </span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 24px; padding: 22px 28px; background: #212B35; border-radius: 16px; outline: 2px solid #EEF1F4; outline-offset: -2px">
+      <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto">
+        <span style="font-size: 22px; font-weight: 600">2. Tilgang til varsler</span>
+        <span style="font-size: 17px; color: #A3ADB8">Viser om noe faktisk spilles av, eller bare står på pause.</span>
+      </div>
+      <button type="button" style="font-family: inherit; font-size: 18px; font-weight: 600; padding: 12px 22px; min-height: 48px; border-radius: 10px; border: 0; background: #EEF1F4; color: #0F1317">Åpne innstillinger</button>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 20px; border-top: 1px solid #26303A">
+    <span style="font-size: 17px; color: #C9D1D9">I innstillingen finner du «Systemverktøy» i listen. Slå bryteren på, og trykk Tilbake.</span>
+    <span style="font-size: 15px; color: #A3ADB8">Ingenting sendes ut av TV-en. All logg lagres bare her.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

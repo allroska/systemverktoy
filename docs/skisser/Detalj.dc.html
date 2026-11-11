@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<title>Detaljer – Netflix-økt</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#A9CEFF}a:hover{color:#D4E7FF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; padding: 36px 56px; background: #0F1317; color: #EEF1F4; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <div style="display: flex; align-items: baseline; gap: 16px">
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700">Netflix</h1>
+      <span style="font-size: 20px; color: #A3ADB8">i dag 14:12 – 15:40 · åpen i 1 t 28 min</span>
+    </div>
+    <span style="font-size: 15px; color: #A3ADB8; padding: 6px 12px; border: 1px solid #34404C; border-radius: 8px">Tilbake = til tidslinjen</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; height: 56px; border-radius: 10px; overflow: hidden; gap: 3px">
+      <div style="flex: 6 1 0; background: #F7C266"></div>
+      <div style="flex: 75 1 0; background: #4E95F0; display: flex; align-items: center; padding-left: 20px; font-size: 18px; font-weight: 600; color: #0F1317">Spilte av · 1 t 15 min</div>
+      <div style="flex: 7 1 0; background: #F7C266"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 14px; color: #A3ADB8; font-variant-numeric: tabular-nums">
+      <span>14:12</span><span>15:40</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; flex: 1 1 auto">
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h2 style="margin: 0 0 6px; font-size: 17px; font-weight: 600; color: #A3ADB8; text-transform: uppercase; letter-spacing: 0.06em">Hva skjedde</h2>
+      <div style="display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 16px; background: #182028; border-radius: 10px">
+        <span style="width: 120px; font-size: 17px; color: #C9D1D9; font-variant-numeric: tabular-nums">14:12 – 14:18</span>
+        <span style="width: 12px; height: 12px; border-radius: 6px; background: #F7C266"></span>
+        <span style="font-size: 18px">Åpen, ingenting spilt</span>
+        <span style="margin-left: auto; font-size: 17px; color: #C9D1D9">6 min</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 16px; background: #182028; border-radius: 10px">
+        <span style="width: 120px; font-size: 17px; color: #C9D1D9; font-variant-numeric: tabular-nums">14:18 – 15:33</span>
+        <span style="width: 12px; height: 12px; border-radius: 6px; background: #4E95F0"></span>
+        <span style="font-size: 18px; font-weight: 600">Spilte av</span>
+        <span style="margin-left: auto; font-size: 17px; color: #C9D1D9">1 t 15 min</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 16px; background: #182028; border-radius: 10px">
+        <span style="width: 120px; font-size: 17px; color: #C9D1D9; font-variant-numeric: tabular-nums">15:33 – 15:40</span>
+        <span style="width: 12px; height: 12px; border-radius: 6px; background: #F7C266"></span>
+        <span style="font-size: 18px">Pauset</span>
+        <span style="margin-left: auto; font-size: 17px; color: #C9D1D9">7 min</span>
+      </div>
+      <div style="margin-top: 10px; padding: 16px; border: 1px solid #34404C; border-radius: 10px; font-size: 16px; line-height: 1.5; color: #C9D1D9">
+        <strong style="color: #EEF1F4">Hva ble sett?</strong> Netflix forteller ikke andre apper hvilken tittel som spilles. Se profilen → Seeraktivitet på netflix.com for å se hva det var.
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h2 style="margin: 0 0 6px; font-size: 17px; font-weight: 600; color: #A3ADB8; text-transform: uppercase; letter-spacing: 0.06em">Grunnlag – rå signaler</h2>
+      <div style="background: #182028; border-radius: 10px; padding: 8px 16px; display: flex; flex-direction: column">
+        <sc-for list="{{signals}}" as="s" hint-placeholder-count="6">
+          <div style="display: flex; gap: 16px; padding: 10px 0; border-bottom: 1px solid #26303A; font-size: 16px">
+            <span style="width: 56px; color: #A3ADB8; font-variant-numeric: tabular-nums">{{s.t}}</span>
+            <span style="width: 120px; color: #A3ADB8">{{s.src}}</span>
+            <span>{{s.text}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: #A3ADB8">Skjermspareren startet ikke i denne perioden. Det støtter at noe faktisk ble spilt av.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      signals: [
+        { t: '14:12', src: 'App-logg', text: 'Netflix åpnet' },
+        { t: '14:18', src: 'Avspilling', text: 'Netflix meldte «spiller»' },
+        { t: '15:33', src: 'Avspilling', text: 'Netflix meldte «pauset»' },
+        { t: '15:40', src: 'App-logg', text: 'Netflix lukket, YouTube åpnet' },
+        { t: '—', src: 'Skjermsparer', text: 'Ingen start mellom 14:12 og 15:40' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
