@@ -71,12 +71,15 @@ Kjent felle: Økter må spores per activity (pakke + klasse), ikke per pakke. En
 
 Referanseskisser ligger i `docs/skisser/` (HTML). De viser layout, tekster og farger med oppdiktede eksempeldata. Skjermene er 16:9 og skal fungere fra 1280×720 til 1920×1080.
 
-### 5.1 I dag (hovedskjerm) – `docs/skisser/Main.dc.html`
-- Overskrift «I dag» + dato («onsdag 11. november»).
-- Tre oppsummeringsbokser: **Sett på** (sum + fordeling per app, f.eks. «Netflix 1 t 15 · YouTube 20 min»), **Sto bare på** (sum), **Første gang slått på** (klokkeslett + «Klokka er nå …»).
-- En horisontal døgnstripe 06–24 med farget periode per kategori og en hvit strek for «nå».
-- Tidslinje-liste, én rad per periode: tidsrom, fargeprikk, appnavn, kategori-chip, varighet. Pågående periode viser «pågår».
+### 5.1 I dag (hovedskjerm) – `docs/skisser/Kompakt.png` (kilde: `Kompakt.html`)
+Kompakt layout (eier 11.11): tidslinjen skal ta mesteparten av skjermen. Målt i 960×540 dp:
+- **Linje 1** (11 sp, dempet): «I dag · onsdag 11. november» til venstre, «← / → dag · ↑ / ↓ rad · OK detaljer» til høyre. Ingen stor overskrift.
+- **Linje 2** (14 sp, tall i fet skrift): «Sett på 7 min (Netflix 4 · NRK TV 3) | Sto bare på < 1 min | HDMI 4 t 35 min | Første påslag 17:22», med liten fargefirkant foran hver sum. Ingen bokser.
+- **Linje 3** (11 sp, kun når aktuelt): «Appen fulgte med fra kl. 17:15» (dempet), eller «Ufullstendig: 2 hull, 1 t 10 min» (dempet oransje). Ingen stor varselramme; detaljene ligger i detaljer/rålogg.
+- **Døgnstripe** 06–24, 8 dp høy, med små timetall under og hvit strek for «nå».
+- **Tidslinje-liste**, nyeste øverst, én linje per periode, ca. 28 dp høy, 13 sp: tidsrom, fargeprikk, appnavn, kategori-chip, varighet. Pågående periode viser «–nå» og «pågår». Minst 12 rader synlige på 1920×1080.
 - Tom dag: «TV-en har ikke vært slått på i dag.»
+- Den gamle skissen `Main.dc.html` (store bokser) gjelder ikke lenger for layout, bare for farger og kategorinavn.
 
 ### 5.2 Detaljer for én økt – `docs/skisser/Detalj.dc.html`
 Åpnes med OK på en rad. Viser for én app-økt:
@@ -110,7 +113,7 @@ Referanseskisser ligger i `docs/skisser/` (HTML). De viser layout, tekster og fa
 Fokusert rad har tydelig hvit ramme. Alt skal kunne brukes uten berøring.
 
 ### Visuell stil
-Mørkt tema: bakgrunn `#0F1317`, flater `#182028`, fokusflate `#212B35`, tekst `#EEF1F4`, dempet tekst `#A3ADB8`. Skrift: Inter eller systemets sans-serif. Ingen emoji. Tekst minst 15 sp på TV.
+Mørkt tema: bakgrunn `#0F1317`, flater `#182028`, fokusflate `#212B35`, tekst `#EEF1F4`, dempet tekst `#A3ADB8`. Skrift: Inter eller systemets sans-serif. Ingen emoji. Tekst minst 13 sp i lister og summer, minst 11 sp for hjelpetekst (65" 4K-skjerm, eier 11.11).
 
 ## 6. Data
 

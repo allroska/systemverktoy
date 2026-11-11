@@ -93,13 +93,13 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 5. Oppdater README med kort om eksport og tools/hent-tvlogg.ps1.
 6. Tidslinje før lytteren fantes: perioder før første onListenerConnected noensinne (f.eks. historikk hentet fra Android fra før appen ble installert) har ingen avspillingsdata. De skal ikke vises som «App åpen, ingenting spilt», men som «App åpen – avspilling ukjent» (egen undertekst, samme gule farge, teller ikke i «Sett på»). Detaljskjermen skal forklare: «Appen fulgte ikke med på avspilling før <dato kl>.» Test for dette.
 7. «Ufullstendig dag» skal ikke liste hull fra før første hjerteslag/onListenerConnected noensinne (appen fantes ikke da). Vis i stedet én linje: «Appen fulgte med fra <dato kl>.» Hull på 0 minutter (f.eks. «13:09 – 13:09») skal aldri vises. Tester for begge.
-8. Ny, kompakt layout på «I dag» (eieren: overskriften og boksene tar for mye plass). Erstatt dagens topp med dette, og la tidslinjen ta resten av høyden (minst 10 synlige rader på 1920×1080):
-   - Linje 1 (liten, én linje): «I dag · onsdag 11. november» til venstre, «← / → dag · OK detaljer» til høyre. Ingen stor overskrift.
-   - Linje 2 (én linje, større tall): «Sett på 7 min (Netflix 4 · NRK TV 3) · Sto bare på < 1 min · HDMI 4 t 55 min · Første påslag 17:22». Ingen bokser.
-   - Linje 3 (kun hvis aktuelt, én linje, dempet oransje): «Ufullstendig: 2 hull, 1 t 10 min» – detaljene ligger i rålogg/detaljer, ikke i en stor ramme.
-   - Døgnstripe: maks 12 dp høy.
-   - Tidslinje-rader: én linje hver, 36–40 dp høye.
-   Compose-UI-test at minst 10 rader er synlige i 960×540 dp. Oppdater docs/skisser/Main.dc.html ikke – SPEC 5.1 oppdateres med denne beskrivelsen.
+8. Ny, kompakt layout på «I dag» etter skissen docs/skisser/Kompakt.png (kilde Kompakt.html) og SPEC 5.1. Erstatt dagens topp (stor overskrift, tre bokser, stor oransje varselramme):
+   - Linje 1 (11 sp, dempet): «I dag · onsdag 11. november» til venstre, «← / → dag · ↑ / ↓ rad · OK detaljer» til høyre.
+   - Linje 2 (14 sp, tall i fet skrift): «Sett på 7 min (Netflix 4 · NRK TV 3) | Sto bare på < 1 min | HDMI 4 t 35 min | Første påslag 17:22». Ingen bokser.
+   - Linje 3 (11 sp, kun når aktuelt): «Appen fulgte med fra kl. 17:15» eller «Ufullstendig: 2 hull, 1 t 10 min» (dempet oransje). Ingen ramme.
+   - Døgnstripe 8 dp høy med små timetall under.
+   - Tidslinje-rader: én linje hver, ca. 28 dp høye, 13 sp. Fokusert rad: hvit ramme.
+   Compose-UI-test at minst 12 rader er synlige i 960×540 dp.
 9. «Første gang slått på» skal ikke telle korte systemoppvåkninger: perioder under 2 minutter der bare systemapper (com.android.tv.settings, launcher uten tastetrykk, Sony-systempakker) er i forgrunnen, skal ikke regnes som påslag (eksempel fra TV-en: «Innstillinger 04:48–04:48 < 1 min» midt på natten – bekreftet at ingen var våkne, altså TV-en selv). Periodene vises fortsatt i tidslinjen. Test for dette.
 ```
 

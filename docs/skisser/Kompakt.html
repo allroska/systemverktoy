@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:960px;height:540px;background:#0F1317;color:#EEF1F4;font-family:Inter,"DejaVu Sans",sans-serif;padding:18px 32px 0;overflow:hidden}
+.l1{display:flex;justify-content:space-between;font-size:11px;color:#A3ADB8;height:16px;align-items:center}
+.l1 b{color:#EEF1F4;font-weight:600}
+.l2{font-size:14px;height:24px;display:flex;align-items:center;gap:6px;margin-top:4px;white-space:nowrap}
+.l2 .k{color:#A3ADB8}.l2 .v{font-weight:700}.sep{color:#56616C;margin:0 6px}
+.sq{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.l3{font-size:11px;color:#A3ADB8;height:16px;margin-top:2px}
+.strip{position:relative;height:8px;background:#182028;border-radius:3px;margin-top:8px}
+.seg{position:absolute;top:0;height:8px}
+.now{position:absolute;top:-3px;width:2px;height:14px;background:#fff}
+.ticks{position:relative;height:13px;font-size:9px;color:#56616C;margin-top:2px}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.list{margin-top:6px}
+.row{display:grid;grid-template-columns:96px 14px 1fr 150px 70px;align-items:center;height:28px;font-size:13px;padding:0 10px;border:2px solid transparent;border-radius:6px}
+.row:nth-child(odd){background:#141a20}
+.row.f{background:#212B35;border-color:#fff}
+.t{color:#A3ADB8;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%}
+.chip{font-size:11px;padding:1px 8px;border-radius:9px;justify-self:start;color:#0F1317;font-weight:600}
+.d{text-align:right;font-variant-numeric:tabular-nums}
+.home{background:transparent!important;border:1px dashed #9AA4AF;color:#9AA4AF!important}
+</style></head><body>
+<div class="l1"><div><b>I dag</b> · onsdag 11. november</div><div>← / → dag · ↑ / ↓ rad · OK detaljer</div></div>
+<div class="l2">
+ <span class="sq" style="background:#4E95F0"></span><span class="k">Sett på</span><span class="v">7 min</span><span class="k">(Netflix 4 · NRK TV 3)</span>
+ <span class="sep">|</span><span class="sq" style="background:#56616C"></span><span class="k">Sto bare på</span><span class="v">&lt; 1 min</span>
+ <span class="sep">|</span><span class="sq" style="background:#9B8AF0"></span><span class="k">HDMI</span><span class="v">4 t 35 min</span>
+ <span class="sep">|</span><span class="k">Første påslag</span><span class="v">17:22</span>
+</div>
+<div class="l3">Appen fulgte med fra kl. 17:15</div>
+<div class="strip" id="s"></div>
+<div class="ticks" id="tk"></div>
+<div class="list" id="l"></div>
+<script>
+const C={W:'#4E95F0',A:'#F7C266',I:'#56616C',H:'#9AA4AF',X:'#9B8AF0',U:'#E8875F'};
+const N={W:'Sett på',A:'App åpen',I:'Sto bare på',H:'Startskjerm – teller ikke',X:'HDMI',U:'Ukjent'};
+const rows=[
+['22:19','22:24','Systemverktøy','A','5 min','pågår'],
+['17:44','22:19','HDMI 4','X','4 t 35 min'],
+['17:38','17:44','Startskjerm','H','6 min'],
+['17:37','17:38','Skjermsparer','I','< 1 min'],
+['17:36','17:37','Startskjerm','H','1 min'],
+['17:34','17:36','NRK TV','A','2 min','pauset'],
+['17:31','17:34','NRK TV','W','3 min'],
+['17:27','17:31','Netflix','A','4 min','ingenting spilt'],
+['17:26','17:27','Netflix','W','1 min'],
+['17:25','17:26','Netflix','A','1 min','pauset'],
+['17:22','17:25','Netflix','W','3 min'],
+['17:15','17:22','Startskjerm','H','7 min'],
+['17:15','','Appen startet å følge med','','',''],
+];
+const m=t=>{const[a,b]=t.split(':');return +a*60+ +b};
+const S=6*60,E=24*60,pct=t=>((m(t)-S)/(E-S)*100)+'%';
+const s=document.getElementById('s');
+rows.forEach(r=>{if(!r[1]||!r[3])return;const d=document.createElement('div');d.className='seg';d.style.left=pct(r[0]);d.style.width=Math.max(.15,(m(r[1])-m(r[0]))/(E-S)*100)+'%';d.style.background=C[r[3]];s.appendChild(d)});
+const n=document.createElement('div');n.className='now';n.style.left=pct('22:24');s.appendChild(n);
+const tk=document.getElementById('tk');for(let h=6;h<=24;h+=3){const e=document.createElement('span');e.style.left=((h*60-S)/(E-S)*100)+'%';e.textContent=String(h).padStart(2,'0');if(h==6)e.style.transform='none';if(h==24)e.style.transform='translateX(-100%)';tk.appendChild(e)}
+const l=document.getElementById('l');
+rows.forEach((r,i)=>{const d=document.createElement('div');d.className='row'+(i==1?' f':'');
+ if(!r[3]){d.innerHTML=`<span class="t">${r[0]}</span><span></span><span style="color:#A3ADB8;font-style:italic">${r[2]}</span><span></span><span></span>`;l.appendChild(d);return}
+ const lab=N[r[3]]+(r[5]&&r[5]!='pågår'?', '+r[5]:'');
+ d.innerHTML=`<span class="t">${r[0]}–${r[5]=='pågår'?'nå':r[1]}</span><span class="dot" style="background:${C[r[3]]}"></span><span>${r[2]}</span><span class="chip ${r[3]=='H'?'home':''}" style="background:${C[r[3]]}">${lab}</span><span class="d">${r[5]=='pågår'?'pågår':r[4]}</span>`;l.appendChild(d)});
+</script></body></html>
