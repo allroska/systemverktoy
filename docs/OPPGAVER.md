@@ -105,6 +105,13 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 
 ---
 
+## Senere (bestemt, ikke startet)
+
+- **PIN-kode** (eier 11.11): fire sifre med piltastene når appen åpnes. Ikke hast. Lages etter Oppgave 4.
+- **Sjekke hjemmefra:** produktvalg ikke tatt ennå. Appen skal fortsatt ikke ha `INTERNET`.
+
+---
+
 ## Maler
 
 **Rette review-funn** (i samme Codex-chat som laget PR-en):
