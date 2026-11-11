@@ -105,7 +105,7 @@ class DayPresentationTest {
         assertTrue(report.raw.none { it.time > historyWindow(day, zone).end })
     }
 
-    @Test fun `Netflix across midnight takes priority over the later 1700 power on`() {
+    @Test fun `Netflix across midnight does not replace the later power on`() {
         val events = listOf(event(-30, Source.USAGE, "ACTIVITY_RESUMED", "com.netflix.ninja"),
             event(-30, Source.MEDIA, "SESSION_ADDED", "com.netflix.ninja", "STATE_PLAYING")) +
             listOf(-30L, -15L, 0L, 15L, 30L).map { event(it, Source.APP, "heartbeat") } +
@@ -114,7 +114,7 @@ class DayPresentationTest {
                 event(1021, Source.USAGE, "ACTIVITY_RESUMED", "example.home"))
         val ordered = events.sortedBy { it.time }
         val report = dayReport(HistoryBatch(ordered, ordered.first().time), day, zone, start + 1040 * 60_000, own)
-        assertEquals(start, report.firstOn)
+        assertEquals(start + 1020 * 60_000, report.firstOn)
         assertEquals(start, report.periods.first().start)
         assertEquals(40 * 60_000L, report.periods.first().durationMillis)
     }

@@ -118,7 +118,7 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
             Text("|", color = muted, fontSize = 14.sp)
             SummaryValue("HDMI", durationText(report.total(Category.HDMI)), Category.HDMI)
             Text("|", color = muted, fontSize = 14.sp)
-            SummaryValue("Første påslag", report.firstOn?.let { clockText(it, zone) } ?: "—", null)
+            SummaryValue("Første påslag", firstOnText(report, zone), null)
         }
         val note = monitoringText(report, day, zone)
         if (note != null) Text(note, fontSize = 11.sp,
@@ -155,7 +155,7 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
 }
 
 @Composable
-private fun DayHeading(text: String, modifier: Modifier, onDiagnostics: () -> Unit) {
+internal fun DayHeading(text: String, modifier: Modifier, onDiagnostics: () -> Unit) {
     val scope = rememberCoroutineScope()
     var held by remember { mutableStateOf<Job?>(null) }
     var focused by remember { mutableStateOf(false) }

@@ -97,3 +97,24 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
    DEVICE_STARTUP skal aldri bli påslag.
 5. La appen ligge i bakgrunnen minst et døgn. Hent filene igjen og kontroller
    eksporttidspunktet i diagnosefilen (WorkManager kan utsettes under standby).
+
+## Oppgave 5 – Oversikt og PIN
+
+1. Installer som oppdatering. Velg PIN med tallknapper og gjenta. Test også piler:
+   hvert siffer starter på 0, opp/ned endrer det, venstre/høyre flytter, OK bekrefter.
+   Ulike bekreftelser skal kreve nytt valg. Sifrene skal alltid vises som prikker.
+2. Gå til startskjermen og tilbake: PIN kreves igjen, også fra detaljer/diagnose.
+   Fem feil skal sperre i ett minutt; riktig kode skal virke etterpå. Loggingen
+   skal fortsette mens appen er låst. Prøv adb-nullstilling fra README og kontroller
+   at ny kode kan velges uten tap av historikk.
+3. Etter PIN vises Oversikt. Sammenlign sum med WATCHING i tidslinjen. Korte pauser
+   og turer til startskjermen på høyst fem minutter skal inngå i samme økt, men bare
+   avspilling gir minutter. En annen app med avspilling starter en ny økt.
+4. Kontroller kumulative blå streker (siste er full), grå ukjente historiske økter,
+   tom dag, HDMI-/inaktivsum, 720p/1080p og stor skrift. Opp/ned flytter fokus,
+   OK viser hele økten, ned fra siste rad åpner tidslinjen.
+   Tilbake går detaljer → forrige skjerm → Oversikt → ut. Dagbytte virker begge steder.
+5. Kontroller påslag etter aktivitet over midnatt: nattlig omstart teller ikke,
+   neste vanlige påslag vises. Uten avslag hele dagen står «på fra i går».
+6. Eksporter gjentatte ganger. Filnavn skal være uendrede, uten nummererte kopier.
+   PowerShell 5.1 skal vise æøå riktig i henteskriptet.

@@ -51,7 +51,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { SystemverktoyTheme { TimelineApp() } }
+        setContent { SystemverktoyTheme { PinGate { TimelineApp() } } }
     }
 
     override fun onResume() {
