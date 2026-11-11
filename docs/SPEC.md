@@ -43,20 +43,26 @@ Hver tidsperiode i løpet av dagen får nøyaktig én kategori:
 | `IDLE` | Sto bare på | Grå `#56616C` | Nei (egen sum) |
 | `HOME` | Startskjerm – teller ikke | Lys grå `#9AA4AF`, stiplet chip | Nei |
 | `UNKNOWN` | Ukjent – mangler logg | Oransje `#E8875F`, skravert | Nei |
+| `HDMI` | HDMI 1–4 (konsoll o.l.) | Lilla `#9B8AF0` | Nei (egen sum «HDMI») |
 | `OFF` | (vises ikke som periode) | – | – |
 
-### Klassifiseringsregler (versjon 1 – justeres etter testappen)
+### Klassifiseringsregler (versjon 2 – basert på TV-testen 11.11, se docs/RESEARCH.md)
 
-Bygges fra tre uavhengige signaler: **forgrunnsapp** (UsageEvents), **avspillingsstatus** (MediaSession) og **skjermsparer** (`ACTION_DREAMING_STARTED/STOPPED`). Lydavspilling (`AudioManager.registerAudioPlaybackCallback`) er reservesignal.
+Signaler: **forgrunnsapp** (UsageEvents), **avspillingsstatus** (MediaSession), **skjermsparer** (DREAM + `dreamx/DreamActivity`), **skjerm av/på**, **hjerteslag** og **lytter tilkoblet/frakoblet**. AUDIO (`media_active`) er reservesignal for apper uten MediaSession.
 
-1. `OFF`: mellom `SCREEN_NON_INTERACTIVE` og `SCREEN_INTERACTIVE`, eller mellom `DEVICE_SHUTDOWN` og `DEVICE_STARTUP`.
-2. `IDLE`: skjermsparer aktiv (kringkasting mottatt, eller skjermsparer-pakken har en åpen activity i UsageEvents).
-3. `HOME`: launcheren (Google TV-hjemmeskjermen) er i forgrunnen. Lyd fra trailere på hjemmeskjermen ignoreres.
-4. `WATCHING`: en annen app enn launcheren er i forgrunnen **og** den samme appen har en MediaSession med `STATE_PLAYING` (eller, som reserve, media-lyd er aktiv mens appen er i forgrunnen).
-5. `APP_OPEN`: en app er i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon).
-6. `UNKNOWN`: hull der appen vet at den ikke har data (f.eks. lytteren var frakoblet, eller logg mangler mellom to tidspunkt der TV-en var på).
+Prioritet når flere regler treffer samtidig: `UNKNOWN` > `IDLE` > `OFF` > `HDMI` > `WATCHING` > `HOME` > `APP_OPEN`.
 
-Kjent felle: Netflix melder «spiller» allerede på sin egen startside når autoforhåndsvisning er på. Husstanden har flere Netflix-profiler, så autoforhåndsvisning **kan ikke** forutsettes avslått. Klassifiseringen må selv skille meny-forhåndsvisning fra ekte avspilling, f.eks. ved å kreve at Netflix sin avspiller-activity er i forgrunnen (activity-klassenavn logges i fase 1).
+1. `IDLE`: fra `DREAMING_STARTED` (eller `dreamx … DreamActivity` RESUMED) til `DREAMING_STOPPED` (eller `SCREEN_INTERACTIVE`). **Skjermspareren gir også `SCREEN_NON_INTERACTIVE` – det skal tolkes som IDLE, ikke OFF.**
+2. `OFF`: `SCREEN_NON_INTERACTIVE` uten aktiv skjermsparer, til `SCREEN_INTERACTIVE`; eller `DEVICE_SHUTDOWN` → `DEVICE_STARTUP`/`BOOT_COMPLETED`. Vises ikke som periode.
+3. `HDMI`: `com.sony.dtv.tvx` i forgrunnen. Visningsnavn tas fra MediaSession-tittelen («HDMI 4»). Telles i egen sum, ikke i «Sett på» (konsollen sier ikke om noe spilles).
+4. `WATCHING`: en app (ikke launcher, ikke tvx) i forgrunnen **og** samme app har MediaSession `STATE_PLAYING` (eller `STATE_BUFFERING` rett før `PLAYING`). Reserve uten MediaSession: AUDIO `media_active=1` mens appen er i forgrunnen.
+   - **Netflix bruker samme `MainActivity` for meny og avspiller** – activity-klasse kan ikke brukes. MediaSession-status avgjør.
+   - Forhåndsvisninger (andre Netflix-profiler kan ha dem på): sammenhengende `PLAYING`-perioder **kortere enn 60 sekunder** telles som `APP_OPEN`, ikke `WATCHING`.
+5. `HOME`: `com.google.android.apps.tv.launcherx` i forgrunnen. Lyd/trailere der ignoreres.
+6. `APP_OPEN`: annen app i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon). Innstillinger, Downloader o.l. vises med appnavn.
+7. `UNKNOWN`: skjermen er på, men det mangler hjerteslag i mer enn 35 minutter, eller lytteren er frakoblet. Appen gjetter aldri over hull.
+
+Støy som ignoreres i tidslinjen (beholdes i rå logg): USAGE `EVENT_11`, `EVENT_12`, `EVENT_14` og andre hendelsestyper enn ACTIVITY_*/SCREEN_*/DEVICE_*; pakkene `android`, `com.android.systemui`, `com.google.android.gsf`, `com.google.android.tungsten.setupwraith`, `com.sony.dtv.*` bortsett fra `tvx`.
 
 Kjent felle: Økter må spores per activity (pakke + klasse), ikke per pakke. En sen `ACTIVITY_STOPPED` fra én activity i en app skal ikke avslutte en annen activity i samme app.
 

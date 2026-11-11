@@ -55,21 +55,23 @@ PR-beskrivelse på norsk etter malen i AGENTS.md, med «Hvordan teste på TV-en�
 
 ## Oppgave 3 – Den ferdige appen (fase 2)
 
-Startes først når testplanen er gjennomført. Legg ved bildene fra TV-en, eller fyll inn resultattabellen i `docs/TESTPLAN.md` først.
+Kan startes nå (TV-testen 11.11 er lagt inn i docs/RESEARCH.md og docs/TESTPLAN.md). Nivå **Høy**.
 
 ```
-Les AGENTS.md, docs/SPEC.md, docs/RESEARCH.md og resultatene i docs/TESTPLAN.md (og vedlagte bilder av testappens logg).
+Les AGENTS.md, docs/SPEC.md (særlig kap. 4 versjon 2 og kap. 5), docs/RESEARCH.md («Kveldstest 11.11») og docs/TESTPLAN.md.
 
-1. Oppdater docs/RESEARCH.md med det testene viste (endre status fra «Må testes» til faktisk resultat).
-2. Lag en ren Kotlin-TimelineBuilder som gjør rå hendelser om til perioder med kategoriene i SPEC kap. 4, justert etter testresultatene. Enhetstester for hver regel.
-3. Bygg skjermene i SPEC kap. 5 etter skissene i docs/skisser/: I dag, tidligere dager med hull-varsel, detaljer med «Grunnlag – rå signaler».
-4. Behold rå logg som skjult diagnoseskjerm.
-5. Ta med punktene Claude la til side i PR #2:
-   - «I dag» skal ikke stå fast over midnatt hvis appen står åpen.
-   - Første element skal ha fokus når en skjerm åpnes.
-   - Hvis TV-testen viser at pause ikke gir ny AUDIO-rad: lagre lydendringer også når teksten er lik, men bare når det har gått noen sekunder siden forrige rad.
+Bygg den ferdige appen (fase 2). Del opp i to PR-er:
 
-Del gjerne opp i flere PR-er (logikk først, så skjermer). Si fra under «Åpne spørsmål» hvis testresultatene gjør at en regel i SPEC bør endres – ikke endre SPEC-en stille.
+PR A – logikk:
+1. Ren Kotlin-TimelineBuilder som gjør rå hendelser fra databasen om til perioder med kategoriene og prioriteten i SPEC kap. 4 (versjon 2), inkludert HDMI, skjermsparer = IDLE (ikke OFF), 60-sekunders-regelen for korte PLAYING-perioder, støyfilteret og UNKNOWN ved manglende hjerteslag.
+2. Enhetstester for hver regel, bygget på det faktiske hendelsesforløpet i docs/RESEARCH.md (Netflix, NRK, skjermsparer, HDMI 4).
+
+PR B – skjermer (når PR A er merget):
+3. Skjermene i SPEC kap. 5 etter skissene i docs/skisser/: I dag (oppsummering, døgnstripe, tidslinje), tidligere dager med hull-varsel, detaljer med «Grunnlag – rå signaler». Mørkt tema og høy kontrast som i dagens rålogg.
+4. Rå logg beholdes som skjult diagnoseskjerm (hold OK på overskriften i 3 s).
+5. «I dag» skal ikke stå fast over midnatt, og første element skal ha fokus når en skjerm åpnes.
+
+Si fra under «Åpne spørsmål» hvis noe i SPEC ikke stemmer med dataene – ikke endre SPEC-en stille.
 ```
 
 ---
