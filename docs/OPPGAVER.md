@@ -93,6 +93,8 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 5. Oppdater README med kort om eksport og tools/hent-tvlogg.ps1.
 6. Tidslinje før lytteren fantes: perioder før første onListenerConnected noensinne (f.eks. historikk hentet fra Android fra før appen ble installert) har ingen avspillingsdata. De skal ikke vises som «App åpen, ingenting spilt», men som «App åpen – avspilling ukjent» (egen undertekst, samme gule farge, teller ikke i «Sett på»). Detaljskjermen skal forklare: «Appen fulgte ikke med på avspilling før <dato kl>.» Test for dette.
 7. «Ufullstendig dag» skal ikke liste hull fra før første hjerteslag/onListenerConnected noensinne (appen fantes ikke da). Vis i stedet én linje: «Appen fulgte med fra <dato kl>.» Hull på 0 minutter (f.eks. «13:09 – 13:09») skal aldri vises. Tester for begge.
+8. «I dag»-skjermen viser bare ca. 2 rader av tidslinjen på TV-en (1920×1080) – for lite. Gi listen minst 8 synlige rader: gjør oppsummeringsboksene lavere, varselet om ufullstendig dag til én kort linje, og døgnstripen tynnere. Listen skal ta resten av høyden. Test med Compose-UI-test at minst 8 rader er synlige i 960×540 dp.
+9. «Første gang slått på» skal ikke telle korte systemoppvåkninger: perioder under 2 minutter der bare systemapper (com.android.tv.settings, launcher uten tastetrykk, Sony-systempakker) er i forgrunnen, skal ikke regnes som påslag (eksempel fra TV-en: «Innstillinger 04:48–04:48 < 1 min» midt på natten). Periodene vises fortsatt i tidslinjen. Test for dette.
 ```
 
 ---
