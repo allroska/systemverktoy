@@ -108,6 +108,8 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 ## Senere (bestemt, ikke startet)
 
 - **PIN-kode** (eier 11.11): fire sifre med piltastene når appen åpnes. Ikke hast. Lages etter Oppgave 4.
+- **Første påslag** (eier 11.11): hvis TV-en var på ved midnatt, er «Første påslag» første gang den ble slått på igjen etter å ha vært av (skjerm av/standby). Natten 10.–11.11 sto TV-en på HDMI fra før midnatt til 04:38 (automatisk standby); appen viste feilaktig «Første påslag 00:00».
+- **Fra review av PR #6 (Bør fikses):** `firstMeaningfulOn` skal behandle `DREAMING_STOPPED` uten skjerm-på som avslag; `DataExport` skal ikke lage «(1)»-kopier (ta med pending-rader, sjekk at `DISPLAY_NAME` ikke er endret). `hent-tvlogg.ps1` lagres som UTF-8 med BOM, så æøå vises riktig i Windows PowerShell 5.1.
 - **Sjekke hjemmefra:** produktvalg ikke tatt ennå. Appen skal fortsatt ikke ha `INTERNET`.
 
 ---
