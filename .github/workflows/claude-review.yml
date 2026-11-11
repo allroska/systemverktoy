@@ -49,5 +49,7 @@ jobs:
 
             Du reviewer bare. Ikke endre filer, ikke push.
           claude_args: |
+            --model claude-opus-5-5
+            --effort high
             --max-turns 40
             --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
