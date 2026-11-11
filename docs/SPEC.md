@@ -58,6 +58,7 @@ Prioritet når flere regler treffer samtidig: `UNKNOWN` > `IDLE` > `OFF` > `HDMI
 4. `WATCHING`: en app (ikke launcher, ikke tvx) i forgrunnen **og** samme app har MediaSession `STATE_PLAYING` (eller `STATE_BUFFERING` rett før `PLAYING`). Reserve uten MediaSession: AUDIO `media_active=1` mens appen er i forgrunnen.
    - **Netflix bruker samme `MainActivity` for meny og avspiller** – activity-klasse kan ikke brukes. MediaSession-status avgjør.
    - Forhåndsvisninger (andre Netflix-profiler kan ha dem på): sammenhengende `PLAYING`-perioder **kortere enn 60 sekunder** telles som `APP_OPEN`, ikke `WATCHING`.
+   - **Korte avbrudd slås sammen:** bufring eller annet avbrudd i avspillingen som varer **under 30 sekunder** i samme app teller som én sammenhengende `WATCHING`-periode (produktvalg 11.11). Sammenslåingen skjer før 60-sekundersregelen.
 5. `HOME`: `com.google.android.apps.tv.launcherx` i forgrunnen. Lyd/trailere der ignoreres.
 6. `APP_OPEN`: annen app i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon). Innstillinger, Downloader o.l. vises med appnavn.
 7. `UNKNOWN`: skjermen er på, men det mangler hjerteslag i mer enn 35 minutter, eller lytteren er frakoblet. Appen gjetter aldri over hull.
