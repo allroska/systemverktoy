@@ -5,7 +5,8 @@ Lim inn én oppgave om gangen i Codex (chatgpt.com/codex), med repoet `systemver
 Flyten for hver oppgave:
 1. Lim inn oppgaven i Codex (nivå **Høy** for store oppgaver) → Codex lager en branch og åpner PR-en selv.
 2. Claude reviewer PR-en automatisk (3–10 minutter).
-3. Hvis Claude har funn: skriv `@codex fiks punktene fra Claude-reviewen` som kommentar på PR-en (bruker det eldre sky-miljøet `systemverktoy-github`). Alternativ for større rettelser: be om det i **samme Codex-chat** som laget PR-en (mal under). Claude reviewer på nytt automatisk.
+3. Hvis Claude har funn: gå til **samme Codex-chat** som laget PR-en og be den rette funnene og pushe til samme branch (mal under). Claude reviewer på nytt automatisk.
+   (`@codex` på GitHub gjør jobben i den eldre Codex Cloud, men pusher ikke av seg selv, og lenken «View task» virker ikke. Ikke bruk den.)
 4. Når Claude sier «Kan merges: Ja»: klikk **Merge pull request** på GitHub.
 5. Etter merge bygges en ny APK automatisk. Installer på TV-en via Downloader.
 
@@ -75,13 +76,9 @@ Del gjerne opp i flere PR-er (logikk først, så skjermer). Si fra under «Åpne
 
 ## Maler
 
-**Rette review-funn** – kommentar på PR-en:
+**Rette review-funn** (i samme Codex-chat som laget PR-en):
 ```
-@codex fiks punktene fra Claude-reviewen
-```
-eller i samme Codex-chat som laget PR-en:
-```
-Claude-reviewen på PR #<nr> har funn. Rett «Må fikses» og det som er rimelig under «Bør fikses», og push til samme branch/PR. Les Claude-kommentarene på PR-en for detaljer.
+Claude-reviewen på PR #<nr> har funn. Rett «Må fikses» og det som er rimelig under «Bør fikses», og push til samme branch – ikke lag ny PR. Les Claude-kommentarene på PR-en for detaljer.
 ```
 
 **Feil funnet på TV-en** (ny oppgave i Codex, legg ved bilde):
