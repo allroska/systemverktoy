@@ -79,3 +79,21 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 8. Kontroller en dag med aktivitet over midnatt, avslag og nytt påslag om ettermiddagen:
    «Første gang slått på» skal vise 00:00. Vanlig standby før dagen skal ikke alene
    gi «Begrenset grunnlag»; skjermsparerens skjerm-av-signal er ikke et slikt grunnlag.
+
+## Oppgave 4 – eksport og kompakt visning
+
+1. Åpne appen: summer skal stå på én linje og minst 12 tidslinjerader skal få plass
+   i 1080p. Nyeste periode står øverst. Test opp/ned, dagbytte, OK og tilbake.
+2. Hold OK på overskriften i tre sekunder. Gå ned til «Eksporter nå», trykk OK og
+   vent på «Eksportert hh:mm». Hent filene med `tools/hent-tvlogg.ps1` fra PC-en.
+   Kontroller alle tre filer, lokal tidssone og 14 lokale dager inklusive i dag.
+   Eksporter igjen: de samme filnavnene skal brukes, uten nummererte kopier.
+3. Velg historikk fra før installasjonen: gule appperioder viser «avspilling ukjent».
+   Åpne detaljer og kontroller forklaringen med dato for første lyttertilkobling.
+   Ingen hullvarsler skal skyldes tiden før appen begynte å følge med.
+4. Kontroller en nattlig omstart (også over to minutter) og en systemoppvåkning
+   som avsluttes innen fem minutter, etterfulgt av vanlig bruk senere: nattperiodene
+   står i listen, men «Første påslag» viser den vanlige bruken. Skjerm-på nær
+   DEVICE_STARTUP skal aldri bli påslag.
+5. La appen ligge i bakgrunnen minst et døgn. Hent filene igjen og kontroller
+   eksporttidspunktet i diagnosefilen (WorkManager kan utsettes under standby).

@@ -44,7 +44,8 @@ internal fun TimelineApp() {
     if (!access.ready) { SetupScreen(access); return }
     val window = remember(day, zone) { historyWindow(day, zone) }
     val history = remember(window) {
-        combine(context.repository.dao.timelineRange(window.floor, window.end), context.repository.dao.oldest(), ::HistoryBatch)
+        combine(context.repository.dao.timelineRange(window.floor, window.end), context.repository.dao.oldest(),
+            context.repository.dao.firstListener(), context.repository.dao.monitoringStart(), ::HistoryBatch)
     }
     val batch by key(window) { history.collectAsStateWithLifecycle<HistoryBatch?>(null) }
     val report by rememberDayReport(batch, day, today, zone, now, context.packageName)
@@ -118,7 +119,7 @@ internal fun TimelineNavigation(day: java.time.LocalDate, today: java.time.Local
     }
     when {
         state.diagnostics -> diagnosticContent()
-        session.isNotEmpty() -> SessionScreen(session, sessionSignals(session, report!!.raw), zone, appName) { state.detail = null }
+        session.isNotEmpty() -> SessionScreen(session, sessionSignals(session, report!!.raw), zone, appName, firstListener = report.firstListener) { state.detail = null }
         else -> DayScreen(day, today, now, zone, report, appName, onMove,
             onOpen = { state.focused = it.start; state.detail = it.start },
             onDiagnostics = { state.diagnostics = true }, list = state.list,

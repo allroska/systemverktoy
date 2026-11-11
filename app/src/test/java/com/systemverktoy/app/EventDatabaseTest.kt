@@ -16,6 +16,19 @@ import java.time.ZoneId
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32], application = Application::class)
 class EventDatabaseTest {
+    @Test fun `first monitoring timestamps are global and ignore unrelated APP and listener events`() = runBlocking {
+        Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EventDatabase::class.java).build().withClose { db ->
+            db.events().insert(listOf(
+                RawEvent(time = 1, source = Source.APP, type = "APP_OPENED"),
+                RawEvent(time = 2, source = Source.LISTENER, type = "onListenerDisconnected"),
+                RawEvent(time = 3, source = Source.APP, type = "heartbeat"),
+                RawEvent(time = 4, source = Source.LISTENER, type = "onListenerConnected"),
+                RawEvent(time = 5, source = Source.LISTENER, type = "onListenerConnected")))
+            assertEquals(3L, db.events().monitoringStart().first())
+            assertEquals(4L, db.events().firstListener().first())
+        }
+    }
+
     @Test fun `timeline query is ordered and bounded including the lookahead endpoint`() = runBlocking {
         Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EventDatabase::class.java).build().withClose { db ->
             db.events().insert(listOf(9L, 10L, 20L, 21L).map { RawEvent(time = it, source = Source.APP, type = "heartbeat") })

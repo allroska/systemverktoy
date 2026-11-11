@@ -29,6 +29,10 @@ import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Button
@@ -65,8 +69,9 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
     val heading = remember { FocusRequester() }
     val first = remember { FocusRequester() }
     val restored = remember { FocusRequester() }
-    val focusIndex = report?.periods?.indexOfFirst { focusedAnchor != null && focusedAnchor >= it.start && focusedAnchor < it.endExclusive }
-        ?.coerceAtLeast(0) ?: 0
+    val displayRows = report?.periods?.asReversed().orEmpty()
+    val focusIndex = displayRows.indexOfFirst { focusedAnchor != null && focusedAnchor >= it.start && focusedAnchor < it.endExclusive }
+        .coerceAtLeast(0)
     val inputMode = LocalInputModeManager.current
     var needsFocus by remember(day) { mutableStateOf(true) }
     LaunchedEffect(day, report != null) {
@@ -83,46 +88,50 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
             needsFocus = false
         }
     }
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(40.dp, 28.dp)
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(32.dp, 18.dp)
         .onPreviewKeyEvent {
             val step = when (it.key) { Key.DirectionLeft -> -1L; Key.DirectionRight -> 1L; else -> null }
             if (step == null) false else {
                 if (it.type == KeyEventType.KeyDown && it.nativeKeyEvent.repeatCount == 0) onMove(step)
                 true
             }
-        }, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             DayHeading(when (day) { today -> "I dag"; today.minusDays(1) -> "I går"; else -> "Tidligere dag" },
                 Modifier.focusRequester(heading).focusProperties {
-                    down = if (report?.periods?.isNotEmpty() == true) first else FocusRequester.Cancel
+                    down = if (displayRows.isNotEmpty()) first else FocusRequester.Cancel
                 }, onDiagnostics)
-            Text(day.format(DateTimeFormatter.ofPattern("EEEE d. MMMM", Locale.forLanguageTag("nb"))),
-                fontSize = 20.sp, color = muted, modifier = Modifier.weight(1f))
-            Text("← / → bytter dag · OK = detaljer", fontSize = 15.sp, color = muted)
+            Text("· " + day.format(DateTimeFormatter.ofPattern("EEEE d. MMMM", Locale.forLanguageTag("nb"))),
+                fontSize = 11.sp, color = muted, modifier = Modifier.weight(1f))
+            Text("← / → dag · ↑ / ↓ rad · OK detaljer", fontSize = 11.sp, color = muted)
         }
         if (report == null) { Text("Laster tidslinje…", color = ink, fontSize = 18.sp); return@Column }
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            SummaryCard("Sett på", durationText(report.total(Category.WATCHING)), report.watchingByApp.entries
-                .sortedByDescending { it.value }.joinToString(" · ") { "${appName(it.key)} ${durationText(it.value)}" }
-                .ifEmpty { "Ingen avspilling registrert" }, Modifier.weight(1f))
-            SummaryCard("Sto bare på", durationText(report.total(Category.IDLE)), "Skjermsparer", Modifier.weight(1f))
-            SummaryCard("Første gang slått på", report.firstOn?.let { clockText(it, zone) } ?: "—",
-                if (day == today) "Klokka er nå ${clockText(now, zone)}" else "Registrert påslag", Modifier.weight(1f))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            SummaryValue("Sett på", durationText(report.total(Category.WATCHING)), Category.WATCHING)
+            val apps = report.watchingByApp.entries.sortedByDescending { it.value }.joinToString(" · ") {
+                "${appName(it.key)} ${durationText(it.value).removeSuffix(" min")}" }
+            if (apps.isNotEmpty()) Text("($apps)", fontSize = 13.sp, color = muted,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            Text("|", color = muted, fontSize = 14.sp)
+            SummaryValue("Sto bare på", durationText(report.total(Category.IDLE)), Category.IDLE)
+            Text("|", color = muted, fontSize = 14.sp)
+            SummaryValue("HDMI", durationText(report.total(Category.HDMI)), Category.HDMI)
+            Text("|", color = muted, fontSize = 14.sp)
+            SummaryValue("Første påslag", report.firstOn?.let { clockText(it, zone) } ?: "—", null)
         }
-        Text("App åpen: ${durationText(report.total(Category.APP_OPEN))} · HDMI: ${durationText(report.total(Category.HDMI))} · Startskjerm teller ikke",
-            color = muted, fontSize = 15.sp)
-        if (report.gaps.isNotEmpty()) {
-            Notice("Ufullstendig dag: ingen logg ${report.gaps.joinToString(", ") { periodTime(it, zone) }}. Summene dekker kjent aktivitet.")
-        } else if (report.limitedContext) {
-            Notice("Begrenset grunnlag: signaler fra mer enn 48 timer før dagen er utelatt. Eldre tilstand kan mangle.")
-        }
+        val note = monitoringText(report, day, zone)
+        if (note != null) Text(note, fontSize = 11.sp,
+            color = if (report.gaps.isNotEmpty()) Color(0xFFD5A18B) else muted, maxLines = 1,
+            overflow = TextOverflow.Ellipsis)
+        else if (report.limitedContext) Text("Begrenset grunnlag: eldre tilstand kan mangle.", fontSize = 11.sp, color = muted)
         val bounds = dayBounds(day, zone)
         PeriodBar(report.periods, day.atTime(6, 0).atZone(zone).toInstant().toEpochMilli(), bounds.endExclusive,
-            now.takeIf { day == today }, Modifier.fillMaxWidth().height(26.dp))
+            now.takeIf { day == today }, Modifier.fillMaxWidth().padding(top = 4.dp).height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            listOf("06", "09", "12", "15", "18", "21", "24").forEach { Text(it, fontSize = 15.sp, color = muted) }
+            listOf("06", "09", "12", "15", "18", "21", "24").forEach { Text(it, fontSize = 9.sp, color = muted) }
         }
-        LazyColumn(state = list, modifier = Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        LazyColumn(state = list, modifier = Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             if (report.periods.isEmpty()) item {
                 Text(when {
                     report.beforeHistory -> "Ingen lagrede data fra denne dagen."
@@ -132,16 +141,16 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
                     else -> "TV-en har ikke vært slått på denne dagen."
                 }, fontSize = 20.sp, color = ink, modifier = Modifier.padding(vertical = 20.dp))
             }
-            itemsIndexed(report.periods, key = { _, row -> row.start }) { index, row ->
+            itemsIndexed(displayRows, key = { _, row -> row.start }) { index, row ->
                 PeriodRow(row, zone, rowName(row, appName),
                     (when (index) {
                         0 -> Modifier.focusRequester(first).focusProperties { up = heading }
                         focusIndex -> Modifier.focusRequester(restored)
                         else -> Modifier
-                    }).testTag("period-${row.start}"), onFocus = { onRowFocus(row.start) }) { onOpen(row) }
+                    }).testTag("period-${row.start}"), onFocus = { onRowFocus(row.start) }, striped = index % 2 == 0) { onOpen(row) }
             }
         }
-        Text("«Sett på» betyr avspilling, også automatisk avspilling.", fontSize = 15.sp, color = muted)
+        Text("«Sett på» betyr avspilling, også automatisk avspilling.", fontSize = 11.sp, color = muted)
     }
 }
 
@@ -151,9 +160,9 @@ private fun DayHeading(text: String, modifier: Modifier, onDiagnostics: () -> Un
     var held by remember { mutableStateOf<Job?>(null) }
     var focused by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { held?.cancel() } }
-    Text(text, fontSize = 32.sp, color = ink, modifier = modifier.testTag("day-heading")
+    Text(text, fontSize = 11.sp, color = ink, modifier = modifier.testTag("day-heading")
         .onFocusChanged { focused = it.isFocused; if (!it.isFocused) held?.cancel() }
-        .border(2.dp, if (focused) ink else Color.Transparent, shape).padding(8.dp, 4.dp)
+        .border(2.dp, if (focused) ink else Color.Transparent, shape).padding(2.dp)
         .onKeyEvent {
             if (it.key !in listOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)) false else {
                 if (it.type == KeyEventType.KeyDown && it.nativeKeyEvent.repeatCount == 0) {
@@ -166,17 +175,13 @@ private fun DayHeading(text: String, modifier: Modifier, onDiagnostics: () -> Un
 }
 
 @Composable
-private fun SummaryCard(title: String, value: String, detail: String, modifier: Modifier) {
-    Column(modifier.background(panel, shape).padding(16.dp, 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, color = muted, fontSize = 15.sp)
-        Text(value, color = ink, fontSize = 30.sp)
-        Text(detail, color = muted, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
+private fun SummaryValue(label: String, value: String, category: Category?) {
+    if (category != null) Box(Modifier.size(8.dp).background(tint(category), RoundedCornerShape(2.dp)))
+    Text(buildAnnotatedString {
+        withStyle(SpanStyle(color = muted)) { append("$label ") }
+        withStyle(SpanStyle(color = ink, fontWeight = FontWeight.Bold)) { append(value) }
+    }, fontSize = 14.sp, maxLines = 1)
 }
-
-@Composable
-private fun Notice(text: String) { Text(text, fontSize = 17.sp, color = Color(0xFFF4B79C), maxLines = 3,
-    modifier = Modifier.fillMaxWidth().border(1.dp, tint(Category.UNKNOWN), shape).background(panel, shape).padding(12.dp, 8.dp)) }
 
 private fun rowName(row: TimelinePeriod, appName: (String) -> String): String = when (row.category) {
     Category.IDLE -> "Skjermsparer"
@@ -187,21 +192,20 @@ private fun rowName(row: TimelinePeriod, appName: (String) -> String): String = 
 }
 
 @Composable
-private fun PeriodRow(row: TimelinePeriod, zone: ZoneId, name: String, modifier: Modifier, onFocus: () -> Unit, onClick: () -> Unit) {
+private fun PeriodRow(row: TimelinePeriod, zone: ZoneId, name: String, modifier: Modifier, onFocus: () -> Unit, striped: Boolean = false, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     Row(modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused; if (it.isFocused) onFocus() }
         .border(2.dp, if (focused) ink else Color.Transparent, shape)
-        .background(if (focused) focusPanel else Color.Transparent, shape).clickable(onClick = onClick)
-        .padding(14.dp, 10.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(periodTime(row, zone), fontSize = 18.sp, color = ink, modifier = Modifier.width(180.dp))
-        Box(Modifier.size(12.dp).background(tint(row.category), RoundedCornerShape(6.dp)))
-        Text(name, fontSize = 19.sp, color = ink, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Box(Modifier.weight(1.5f)) { CategoryChip(row) }
-        Column(Modifier.width(120.dp), horizontalAlignment = Alignment.End) {
-            Text(durationText(row.durationMillis), fontSize = 18.sp, color = ink)
-            if (row.ongoing) Text("pågår", fontSize = 15.sp, color = muted)
-        }
+        .background(if (focused) focusPanel else if (striped) Color(0xFF141A20) else Color.Transparent, shape).clickable(onClick = onClick)
+        .heightIn(min = 28.dp).padding(horizontal = 10.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(periodTime(row, zone), fontSize = 13.sp, color = muted, modifier = Modifier.width(100.dp), maxLines = 1)
+        Box(Modifier.size(8.dp).background(tint(row.category), RoundedCornerShape(4.dp)))
+        Text(name, fontSize = 13.sp, color = ink, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.weight(1.25f)) { CategoryChip(row) }
+        Text(if (row.ongoing) "pågår" else durationText(row.durationMillis), fontSize = 13.sp, color = ink,
+            modifier = Modifier.width(80.dp), maxLines = 1)
+
     }
 }
 
@@ -213,8 +217,8 @@ private fun CategoryChip(row: TimelinePeriod) {
             drawRoundRect(color, cornerRadius = CornerRadius(18.dp.toPx()), style = Stroke(1.dp.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))))
         }
-        Text(categoryText(row), color = if (row.category == Category.IDLE) ink else color, fontSize = 15.sp,
-            modifier = Modifier.padding(10.dp, 5.dp))
+        Text(categoryText(row), color = if (row.category == Category.IDLE) ink else color, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(8.dp, 1.dp))
     }
 }
 
@@ -245,7 +249,7 @@ internal fun PeriodBar(rows: List<TimelinePeriod>, start: Long, end: Long, now: 
 
 @Composable
 internal fun SessionScreen(rows: List<TimelinePeriod>, signals: List<RawEvent>, zone: ZoneId,
-    appName: (String) -> String, onBack: () -> Unit) {
+    appName: (String) -> String, firstListener: Long? = null, onBack: () -> Unit) {
     val back = remember { FocusRequester() }
     val leftFocus = remember { FocusRequester() }
     val rightFocus = remember { FocusRequester() }
@@ -271,6 +275,11 @@ internal fun SessionScreen(rows: List<TimelinePeriod>, signals: List<RawEvent>, 
             LazyColumn(state = history, modifier = Modifier.weight(1f).fillMaxHeight()
                 .focusRequester(leftFocus).focusProperties { up = back; right = rightFocus }.testTag("session-history").scrollPane(history),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (rows.any { it.playbackUnknown }) item {
+                    Text("Appen fulgte ikke med på avspilling før " +
+                        (firstListener?.let { dateClockText(it, zone) } ?: "varsellytteren ble koblet til") + ".",
+                        fontSize = 17.sp, color = muted)
+                }
                 item { Text("Hva skjedde", color = muted, fontSize = 18.sp) }
                 items(rows, key = { it.start }) { row ->
                     Text("${periodTime(row, zone)} · ${categoryText(row)} · ${durationText(row.durationMillis)}",

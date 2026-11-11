@@ -2,7 +2,7 @@
 
 En liten, helt lokal Android TV-app som viser en tidslinje over hvordan TV-en har vært brukt i løpet av dagen: hvilke apper, når, og om noe faktisk ble spilt av eller om TV-en bare sto på.
 
-- Ingen data forlater TV-en (appen har ikke internett-tilgang).
+- Appen har ikke internett-tilgang. Eieren kan hente lokale eksportfiler til PC med adb.
 - Målenhet: Sony BRAVIA med Google TV (Android TV 12).
 
 ## Dokumentasjon
@@ -28,3 +28,31 @@ En liten, helt lokal Android TV-app som viser en tidslinje over hvordan TV-en ha
 6. Åpne «Systemverktøy» og slå på de to tillatelsene appen ber om.
 
 Samme fremgangsmåte ved hver oppdatering. Appen må alltid signeres med samme nøkkel, ellers må den avinstalleres først (og historikken går tapt).
+
+## Eksport til PC
+
+Appen overskriver tre filer i `Download/Systemverktoy/` når den åpnes og omtrent
+én gang i døgnet (Android kan utsette bakgrunnsjobben i standby):
+
+- `systemverktoy-raa.csv`: råhendelser fra i dag og de 13 foregående lokale dagene.
+- `systemverktoy-tidslinje.csv`: beregnede perioder med grunnlag for samme tidsrom.
+- `systemverktoy-diagnose.txt`: diagnosestatus, appversjon og eksporttidspunkt.
+
+CSV-filene er UTF-8 med komma som skilletegn og ISO-tid med lokal tidssoneoffset.
+Eksporten endrer eller sletter ingen historikk i appen. I skjult diagnosevisning
+(opp til overskriften, hold OK i tre sekunder) kan du velge **Eksporter nå**.
+Vent på «Eksportert hh:mm» før du henter filene.
+
+På PC: installer Android Platform Tools (`winget install Google.PlatformTools`),
+slå på USB-feilsøking på TV-en og godkjenn PC-en. Begge må være på hjemmenettet.
+Kjør i PowerShell fra prosjektmappen (bytt ut eksempeladressen med TV-ens IP):
+
+```powershell
+.\tools\hent-tvlogg.ps1 -Tv 192.168.1.50
+```
+
+[`tools/hent-tvlogg.ps1`](tools/hent-tvlogg.ps1) henter filene med adb til en
+mappe med dato og klokkeslett under Dokumenter/Systemverktoy-logg. `-Mappe` velger
+et annet mål. `-Installer` installerer nyeste APK først (krever GitHub CLI);
+åpne deretter appen på TV-en for å lage fersk eksport. Selve appen sender ingenting
+på nett og trenger ingen lagringstillatelse.

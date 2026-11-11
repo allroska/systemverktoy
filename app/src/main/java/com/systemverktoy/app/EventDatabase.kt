@@ -29,6 +29,12 @@ interface EventDao {
     @Query("SELECT * FROM raw_events WHERE time >= :start AND time <= :end ORDER BY time, id")
     fun timelineRange(start: Long, end: Long): Flow<List<RawEvent>>
 
+    @Query("SELECT MIN(time) FROM raw_events WHERE source = 'LISTENER' AND type = 'onListenerConnected'")
+    fun firstListener(): Flow<Long?>
+
+    @Query("SELECT MIN(time) FROM raw_events WHERE (source = 'LISTENER' AND type = 'onListenerConnected') OR (source = 'APP' AND type = 'heartbeat')")
+    fun monitoringStart(): Flow<Long?>
+
     @Query("SELECT MIN(time) FROM raw_events")
     fun oldest(): Flow<Long?>
 

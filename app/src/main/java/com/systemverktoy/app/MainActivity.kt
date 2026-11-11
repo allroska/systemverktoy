@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         repository.log(Source.APP, "APP_OPENED", packageName)
         CollectorWorker.now(this)
+        ExportWorker.now(this)
         if (!repository.connected.value) requestListener(this)
     }
 }
@@ -128,10 +129,9 @@ internal fun RawLog(access: Access, today: LocalDate, zone: ZoneId, initialDay: 
     val oldest by repo.oldestUsage.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     var importantOnly by rememberSaveable { mutableStateOf(false) }
-    val launcher = remember(context) {
-        runCatching { context.packageManager.resolveActivity(
-            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName }.getOrNull()
-    }
+    val launcher = remember(context) { launcherPackage(context) }
+    var exportStatus by remember { mutableStateOf<String?>(null) }
+    var exporting by remember { mutableStateOf(false) }
     val visibleEvents = remember(events, importantOnly, launcher) {
         if (importantOnly) events.filter { isImportantEvent(it, launcher, context.packageName) } else events
     }
@@ -180,15 +180,20 @@ internal fun RawLog(access: Access, today: LocalDate, zone: ZoneId, initialDay: 
                 Text(if (importantOnly) "Bare viktige: på" else "Bare viktige: av", fontSize = 15.sp)
             }
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(enabled = !exporting, colors = buttonColors, onClick = {
+                exporting = true
+                scope.launch {
+                    try {
+                        exportStatus = DataExport.run(context)?.let { "Eksportert ${clockText(it, zone)}" } ?: "Eksport mislyktes"
+                    } finally { exporting = false }
+                }
+            }) { Text(if (exporting) "Eksporterer…" else "Eksporter nå", fontSize = 15.sp) }
+            exportStatus?.let { DiagnosticText(it) }
+        }
         Column(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-            DiagnosticText("Brukstilgang: ${onOff(access.usage)} · Varsler: ${onOff(access.notifications)} · Lytter: ${if (connected) "tilkoblet" else "frakoblet"}")
-            val battery = runCatching { context.getSystemService(PowerManager::class.java)
-                .isIgnoringBatteryOptimizations(context.packageName) }.getOrNull()
-            DiagnosticText("Hjerteslag: ${stamp(heartbeat, zone)} · Unntatt batterioptimalisering: ${battery?.let { if (it) "ja" else "nei" } ?: "ukjent"}")
-            val dream = runCatching { Settings.Secure.getString(context.contentResolver, "screensaver_components") }.getOrNull()
-            DiagnosticText("Skjermsparer: ${dream ?: "ukjent / ikke tilgjengelig"}")
-            DiagnosticText("Launcher: ${launcher ?: "ukjent"}")
-            DiagnosticText("Eldst hos Android (siste lesing): ${stamp(oldest, zone)} · Egne rader: $count")
+            diagnosticLines(access, connected, heartbeat, batteryExempt(context), dreamComponent(context),
+                launcher, oldest, count, zone).forEach { DiagnosticText(it) }
         }
         Text("Rå logg · ${visibleEvents.size}/${events.size} hendelser · nyeste øverst · Kanal +/−: én side · " +
             stringResource(R.string.version, BuildConfig.VERSION_NAME), fontSize = 15.sp, color = Color.White)
@@ -223,7 +228,3 @@ internal fun RawLog(access: Access, today: LocalDate, zone: ZoneId, initialDay: 
 @Composable
 private fun DiagnosticText(text: String) { Text(text, fontSize = 15.sp, lineHeight = 18.sp,
     color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-private fun onOff(value: Boolean) = if (value) "på" else "av"
-private fun stamp(time: Long?, zone: ZoneId): String = time?.let {
-    Instant.ofEpochMilli(it).atZone(zone).format(DateTimeFormatter.ofPattern("dd.MM HH:mm:ss xxx"))
-} ?: "ukjent / ingen"
