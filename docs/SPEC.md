@@ -144,7 +144,7 @@ Krav:
 Skjermene i kapittel 5 med klassifiseringen i kapittel 4, justert etter funnene fra fase 1. Rå logg beholdes som en skjult diagnoseskjerm (f.eks. holde OK inne på overskriften i 3 sekunder).
 
 ## 8. Ikke i versjon 1
-Blokkering, tidsgrenser, PIN, varsler, mobilvisning, sky-synk, eksport, flere brukere/profiler.
+Blokkering, tidsgrenser, varsler, mobilvisning, sky-synk, flere brukere/profiler. (PIN er bestemt for en senere oppgave. Eksport til PC over hjemmenettet kommer i Oppgave 4.)
 
 ## 9. Kjente begrensninger (skal være synlige for brukeren der det er relevant)
 - «Sett på» betyr at innhold ble spilt av, ikke at noen satt foran skjermen (autoplay).
