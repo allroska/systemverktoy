@@ -8,7 +8,7 @@ Forberedelse: slå av **autoforhåndsvisning** i Netflix-profilen som skal bruke
 |---|---|---|---|
 | 1 | Tillatelser | Installer, åpne appen, slå på begge bryterne via knappene | Appen vises i begge listene; diagnoseboksen viser begge som «på» og lytteren som «tilkoblet» |
 | 2 | Vanlig app-bruk | Åpne Netflix, så YouTube, så NRK TV, så tilbake til startskjermen | `USAGE`-hendelser med pakke- og klassenavn for hver app og for startskjermen |
-| 3 | Avspilling | Spill noe i hver av de tre appene i 2 min, pause 1 min, spill videre | `MEDIA`-hendelser «spiller» / «pauset» per app; om tittel kommer med |
+| 3 | Avspilling | Spill noe i hver av de tre appene i 2 min, pause 1 min, spill videre | `MEDIA`-hendelser «spiller» / «pauset» per app; om tittel kommer med. Uendret status og tittel skal ikke fylle loggen med like rader; pause, videre avspilling og ny tittel skal fortsatt logges. Samme gjelder endret/uforandret media-lyd (`AUDIO`) |
 | 4 | Netflix-meny | Bla i Netflix-menyen i 3 min uten å starte noe | Kommer det «spiller» likevel? |
 | 5 | Lang avspilling | Spill en film i 30 min uten å røre fjernkontrollen | Ingen skjermsparer-hendelse i perioden |
 | 6 | Skjermsparer | La TV-en stå på startskjermen til skjermspareren starter, trykk så en knapp | `DREAM` start/stopp; om skjermspareren også vises som `USAGE`; verdien for skjermsparer i diagnoseboksen |
@@ -21,6 +21,8 @@ Forberedelse: slå av **autoforhåndsvisning** i Netflix-profilen som skal bruke
 | 13 | Historikk | Etter 14 dager | Hvor gammel er eldste hendelse i Androids logg (forventet ca. 10 dager)? Har appens egen database eldre data? |
 | 14 | Play Protect | Slå Play Protect på igjen etter installasjon og vent et døgn | Blir appen flagget, deaktivert eller fjernet? |
 | 15 | Hjerteslag | Se på diagnoseboksen etter noen timer med TV-en på | Siste hjerteslag er under ca. 15 min gammelt; ingen uforklarte hull |
+| 16 | Manglende tillatelser | Slå av én tillatelse om gangen i TV-innstillingene, åpne appen, og slå den på igjen via oppsettet | Ingen krasj; oppsett vises når en tillatelse mangler, diagnose vises igjen når begge er på |
+| 17 | Gjentatt kopiering | Åpne appen flere ganger etter vanlig app-bruk, og se på samme tidsrom i råloggen. Vent også på en bakgrunnskopiering | Hver `USAGE`-hendelse vises én gang. Nye `APP`- og andre sanntidshendelser er forventet |
 
 ## Resultat
 
@@ -43,3 +45,5 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | 13 | | |
 | 14 | | |
 | 15 | | |
+| 16 | | |
+| 17 | | |
