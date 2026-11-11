@@ -46,7 +46,7 @@ class TimelineBuilder {
             val time = points[index]
             val batch = grouped[time].orEmpty()
             // Expire BEFORE applying new observations, so a late heartbeat cannot
-            // resurrect the app/session that was last observed before a log gap.
+            // resurrect playback last observed before a log gap. USAGE remains valid.
             state.expire(time, batch.any { it.source == Source.APP && it.type == "heartbeat" })
             batch.forEach { state.accept(it, it in buffering) }
             state.finishBatch()
@@ -91,19 +91,21 @@ class TimelineBuilder {
         var audio = false
         val evidence = mutableMapOf<String, RawEvent>()
 
-        fun clearApps() { foreground = null; media.clear(); audio = false }
+        fun clearPlayback() { media.clear(); audio = false }
+        fun clearApps() { foreground = null; clearPlayback() }
 
         fun expire(time: Long, heartbeatAtBoundary: Boolean) {
-            if (interactive == true && !dreaming &&
+            if (!expired && interactive == true && !dreaming &&
                 heartbeatAnchor?.let { time > it + HEARTBEAT_GAP ||
                     (time == it + HEARTBEAT_GAP && !heartbeatAtBoundary) } == true) {
                 expired = true
-                clearApps()
+                clearPlayback()
             }
         }
 
-        fun screenOn(time: Long) {
-            if (interactive != true || dreaming) heartbeatAnchor = time
+        fun screenOn(time: Long, restart: Boolean = false) {
+            if (restart) { clearApps(); evidence.clear() }
+            if (restart || interactive != true || dreaming) heartbeatAnchor = time
             interactive = true
             dreaming = false
             expired = false
@@ -113,7 +115,11 @@ class TimelineBuilder {
             val type = event.type.substringBefore(' ')
             val pkg = event.packageName
             when {
-                type in setOf("SCREEN_INTERACTIVE", "SCREEN_ON", "DEVICE_STARTUP", "BOOT_COMPLETED") -> {
+                type in setOf("DEVICE_STARTUP", "BOOT_COMPLETED") -> {
+                    screenOn(event.time, restart = true)
+                    evidence["power"] = event
+                }
+                type in setOf("SCREEN_INTERACTIVE", "SCREEN_ON") -> {
                     screenOn(event.time)
                     evidence["power"] = event
                 }
@@ -137,7 +143,7 @@ class TimelineBuilder {
                         "onListenerConnected" -> disconnected = false
                         "onListenerDisconnected", "onDestroy" -> {
                             disconnected = true
-                            clearApps()
+                            clearPlayback()
                         }
                     }
                     evidence["listener"] = event
@@ -154,11 +160,10 @@ class TimelineBuilder {
                     evidence["foreground"] = event
                 }
                 event.source == Source.USAGE && type in setOf("ACTIVITY_PAUSED", "ACTIVITY_STOPPED") -> {
-                    // A delayed stop for Menu must never close Player in the same package.
-                    if (foreground == pkg to event.activity) {
-                        foreground = null
-                        evidence["foreground"] = event
-                    }
+                    // Lifecycle interruptions (including filtered overlays) do
+                    // not replace the last resumed app. Neither does a late
+                    // stop for Menu after Player has already resumed.
+                    evidence["activity"] = event
                 }
                 event.source == Source.MEDIA && pkg != null -> {
                     if (type in setOf("SESSION_REMOVED", "SESSION_DESTROYED", "SESSION_UNOBSERVED")) {
@@ -186,7 +191,9 @@ class TimelineBuilder {
             val playback = when {
                 status == "STATE_PLAYING" -> Playback.PLAYING
                 status == "STATE_BUFFERING" && session?.second == true -> Playback.BUFFERING
-                session == null && audio -> Playback.AUDIO
+                session == null && audio && media.none { (other, signal) ->
+                    other != pkg && signal.first.state?.substringBefore(' ') == "STATE_PLAYING"
+                } -> Playback.AUDIO
                 else -> Playback.NONE
             }
             val on = interactive == true || dreaming
@@ -198,7 +205,9 @@ class TimelineBuilder {
                 pkg != null && pkg != HOME && playback != Playback.NONE -> Category.WATCHING
                 pkg == HOME -> Category.HOME
                 pkg != null -> Category.APP_OPEN
-                else -> Category.UNKNOWN
+                // Healthy screen-on time without a known app is omitted, not
+                // reported as missing logging. Power/liveness remain tracked.
+                else -> Category.OFF
             }
             val showApp = category in setOf(Category.HDMI, Category.WATCHING, Category.HOME, Category.APP_OPEN)
             return Slice(start, end, category, pkg.takeIf { showApp },

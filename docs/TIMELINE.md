@@ -9,6 +9,9 @@ underbygger periodene, inkludert relevante signaler fra før dagsgrensen.
 
 Periodene kan summeres etter kategori og pakke. Bare WATCHING inngår i «Sett på»;
 IDLE og HDMI har hver sin sum. Råhendelsene endres eller slettes aldri av beregningen.
+Skjerm på uten kjent app utelates også når loggen ellers er komplett; dette er
+ikke en påstand om at TV-en er av. Manglende hjerteslag eller frakoblet lytter gir
+fortsatt UNKNOWN også uten kjent app.
 
 ## Åpne spørsmål / antakelser
 
@@ -20,7 +23,7 @@ IDLE og HDMI har hver sin sum. Råhendelsene endres eller slettes aldri av bereg
   fortsatt prioritet over IDLE. Ved oppvåkning starter en ny 35-minuttersfrist.
   Ellers ville normal skjermsparer etter 35 minutter alltid bli «Ukjent».
   Strømbrudd mens skjermspareren går kan dermed ikke tidfestes sikkert med dagens
-  hjerteslag; det krever at innsamleren også bekrefter liveness under skjermsparer.
+  hjerteslag; det krever at innsamleren også bekrefter at loggingen går under skjermsparer.
 - **Støy:** RESEARCH nevner innstillinger og Downloader som støy. SPEC v2 sier
   uttrykkelig at de skal vises med appnavn; beregningen følger SPEC.
 - **Tidspunkter i testene:** RESEARCH inneholder signalrekkefølge og utvalgte
@@ -28,10 +31,14 @@ IDLE og HDMI har hver sin sum. Råhendelsene endres eller slettes aldri av bereg
   hjerteslagets start 17:15:36 brukes direkte. Andre varigheter er konstruerte
   testdata for de dokumenterte Netflix-, NRK-, skjermsparer- og HDMI 4-signalene.
 - **Hull og gjenopptak:** Uten et første hjerteslag starter 35-minuttersfristen ved
-  første på-signal/forgrunnsapp. Hull begynner ved fristens utløp. Etter et hull,
-  frakobling eller vanlig avslag gjenbrukes ikke gammel app-/avspillingsstatus.
-  Manglende forgrunnsapp mens skjermen er på vises også som UNKNOWN. Før første
-  observerte på-signal legges det ikke inn perioder.
+  første på-signal/forgrunnsapp. Hull begynner ved fristens utløp. Ved hull eller
+  frakobling nullstilles media og lyd, mens kjent forgrunnsapp fra Androids egen
+  USAGE-logg beholdes. Nye avspillingssignaler kan dermed bekrefte avspilling uten
+  at brukeren må bytte app først. Bare nye RESUMED-hendelser bytter forgrunnsapp;
+  PAUSED og STOPPED lager ikke falske logghull ved appbytte eller systemoverlegg.
+  Ved vanlig skjerm av eller nedstengning nullstilles også forgrunnsappen.
+  DEVICE_STARTUP og BOOT_COMPLETED nullstiller alltid gammel app/avspilling og
+  starter en ny 35-minuttersfrist, også etter strømbrudd uten et av-signal.
 - **Korte avspillinger:** 60-sekundersregelen gjelder sammenhengende avspilling
   med MediaSession, også før klipping ved midnatt. Metadata og hjerteslag bryter
   ikke avspillingen. Pause eller ny BUFFERING bryter PLAYING-forløpet.
@@ -39,6 +46,10 @@ IDLE og HDMI har hver sin sum. Råhendelsene endres eller slettes aldri av bereg
   PLAYING, men buffer-tid oppfyller ikke kravet om 60 sekunder PLAYING. En pågående
   kort avspilling vises først som APP_OPEN og omberegnes etter 60 sekunder.
   AUDIO-reserven har ingen PLAYING-status og filtreres derfor ikke etter lengde.
+  Reserven brukes bare når forgrunnsappen mangler MediaSession og ingen annen
+  pakke har en aktiv PLAYING-sesjon. Dermed tilordnes ikke kjent bakgrunnslyd fra
+  f.eks. Spotify til Innstillinger eller Downloader. Et eventuelt lengdefilter for
+  AUDIO må avklares som en egen produktregel; SPECs 60-sekundersregel gjelder PLAYING.
 - Råloggen har pakkenavn, men ingen MediaSession-identifikator. Beregningen bruker
   siste sesjonssignal per pakke; samtidige sesjoner i samme app kan ikke skilles
   sikkert i eksisterende data.

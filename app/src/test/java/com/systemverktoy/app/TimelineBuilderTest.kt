@@ -155,9 +155,8 @@ class TimelineBuilderTest {
     @Test fun `plain screen off is omitted and wake never reuses old playing state`() {
         val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
             event(70, Source.APP, "SCREEN_OFF"), usage(100, "SCREEN_INTERACTIVE (15)"), end = 180)
-        assertEquals(listOf(Category.WATCHING, Category.UNKNOWN), categories(periods))
+        assertEquals(listOf(Category.WATCHING), categories(periods))
         assertEquals(base + 70_000, periods.first().endExclusive)
-        assertEquals(base + 100_000, periods.last().start)
     }
 
     @Test fun `shutdown ends dream and startup or boot completed ends off`() {
@@ -198,11 +197,13 @@ class TimelineBuilderTest {
         assertEquals(179L, duration(periods, Category.WATCHING))
     }
 
-    @Test fun `matching activity pause closes foreground and never falls back to old app`() {
+    @Test fun `matching activity pause and stop preserve last resumed foreground`() {
         val periods = build(pulse(), resume(pkg = home), resume(1),
-            usage(100, "ACTIVITY_PAUSED (2)", netflix, "MainActivity"))
-        assertEquals(Category.UNKNOWN, periods.last().category)
-        assertEquals(base + 100_000, periods.last().start)
+            usage(100, "ACTIVITY_PAUSED (2)", netflix, "MainActivity"),
+            usage(101, "ACTIVITY_STOPPED (23)", netflix, "MainActivity"))
+        assertEquals(listOf(Category.HOME, Category.APP_OPEN), categories(periods))
+        assertEquals(netflix, periods.last().packageName)
+        assertEquals(base + 1000, periods.last().start)
     }
 
     @Test fun `noise never replaces foreground while settings and Downloader follow SPEC`() {
@@ -242,11 +243,98 @@ class TimelineBuilderTest {
         assertEquals(listOf(Category.HOME, Category.UNKNOWN), categories(periods))
     }
 
-    @Test fun `late heartbeat ends gap without resurrecting old app or session`() {
+    @Test fun `late heartbeat restores known app without resurrecting old session`() {
         val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), pulse(2400),
             resume(2410, home), end = 2500)
-        assertEquals(listOf(Category.WATCHING, Category.UNKNOWN, Category.HOME), categories(periods))
-        assertEquals(310L, duration(periods, Category.UNKNOWN))
+        assertEquals(listOf(Category.WATCHING, Category.UNKNOWN, Category.APP_OPEN, Category.HOME), categories(periods))
+        assertEquals(300L, duration(periods, Category.UNKNOWN))
+        assertEquals(netflix, periods[2].packageName)
+        assertEquals(base + 2_400_000, periods[2].start)
+    }
+
+    @Test fun `listener reconnect resumes Netflix watching without a new activity resume`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), pulse(900),
+            listener(1200, false), listener(1205, true),
+            media(1205, "STATE_PLAYING (spiller)", type = "SESSION_ADDED"), pulse(1800), end = 2400)
+        assertEquals(listOf(Category.WATCHING, Category.UNKNOWN, Category.WATCHING), categories(periods))
+        assertEquals(5L, duration(periods, Category.UNKNOWN))
+        assertEquals(netflix, periods.last().packageName)
+        assertEquals(base + 1_205_000, periods.last().start)
+    }
+
+    @Test fun `fresh session observed during heartbeat gap survives until heartbeat recovery`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
+            media(2370, "STATE_PLAYING", type = "SESSION_ADDED"), pulse(2400), end = 2500)
+        assertEquals(listOf(Category.WATCHING, Category.UNKNOWN, Category.WATCHING), categories(periods))
+        assertEquals(300L, duration(periods, Category.UNKNOWN))
+        assertEquals(base + 2_400_000, periods.last().start)
+    }
+
+    @Test fun `300 ms activity transitions never create missing log warnings`() {
+        val events = listOf(pulse(), resume(pkg = home),
+            usage(1, "ACTIVITY_PAUSED (2)", home, "MainActivity"),
+            resume(1).copy(time = base + 1300),
+            usage(1, "ACTIVITY_STOPPED (23)", home, "MainActivity").copy(time = base + 1600))
+        val periods = builder.build(events, day, zone, base + 180_000)
+        assertEquals(listOf(Category.HOME, Category.APP_OPEN), categories(periods))
+        assertEquals(base + 1300, periods.first().endExclusive)
+        assertEquals(base + 1300, periods.last().start)
+    }
+
+    @Test fun `filtered Sony overlay does not remove known foreground`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
+            usage(80, "ACTIVITY_PAUSED (2)", netflix, "MainActivity"),
+            resume(81, "com.sony.dtv.overlay"), usage(82, "ACTIVITY_STOPPED (23)", netflix, "MainActivity"))
+        assertEquals(listOf(Category.WATCHING), categories(periods))
+        assertEquals(netflix, periods.single().packageName)
+    }
+
+    @Test fun `screen on without foreground is omitted until a real heartbeat gap`() {
+        val on = usage(0, "SCREEN_INTERACTIVE (15)")
+        assertTrue(build(on, pulse()).isEmpty())
+        val periods = build(on, pulse(), end = 2400)
+        assertEquals(listOf(Category.UNKNOWN), categories(periods))
+        assertEquals(base + 2_100_000, periods.single().start)
+    }
+
+    @Test fun `startup after power loss without screen off resets expired heartbeat deadline`() {
+        for (wake in listOf(usage(4000, "DEVICE_STARTUP (27)"), event(4000, Source.APP, "BOOT_COMPLETED"))) {
+            val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), audio(0, 1),
+                wake, resume(4001), media(4010, "STATE_PLAYING", type = "SESSION_ADDED"), end = 4100)
+            val afterBoot = periods.filter { it.start >= wake.time }
+            assertEquals(listOf(Category.APP_OPEN, Category.WATCHING), categories(afterBoot))
+            assertEquals(base + 4_001_000, afterBoot.first().start)
+            assertEquals(90L, duration(afterBoot, Category.WATCHING))
+            assertEquals(wake.time, periods.single { it.category == Category.UNKNOWN }.endExclusive)
+        }
+    }
+
+    @Test fun `startup clears old foreground media and audio even before heartbeat expires`() {
+        for (wake in listOf(usage(100, "DEVICE_STARTUP (27)"), event(100, Source.APP, "BOOT_COMPLETED"))) {
+            val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"), audio(0, 1),
+                wake, resume(110), end = 200)
+            assertEquals(listOf(Category.WATCHING, Category.APP_OPEN), categories(periods))
+            assertEquals(base + 100_000, periods.first().endExclusive)
+            assertEquals(base + 110_000, periods.last().start)
+            assertEquals(90L, duration(periods, Category.APP_OPEN))
+        }
+    }
+
+    @Test fun `background Spotify playing prevents audio from being assigned to settings or Downloader`() {
+        for (pkg in listOf("com.android.tv.settings", "com.esaba.downloader")) {
+            val periods = build(pulse(), resume(pkg = pkg),
+                media(0, "STATE_PLAYING (spiller)", "com.spotify.tv.android"), audio(0, 1),
+                media(100, "STATE_PAUSED (pauset)", "com.spotify.tv.android"), audio(100, 0))
+            assertEquals(listOf(Category.APP_OPEN), categories(periods))
+            assertEquals(pkg, periods.single().packageName)
+        }
+    }
+
+    @Test fun `audio reserve still works when other sessions are paused or removed`() {
+        val periods = build(pulse(), resume(), media(0, "STATE_PLAYING", "com.spotify.tv.android"),
+            audio(0, 1), media(50, "STATE_PAUSED", "com.spotify.tv.android"),
+            event(60, Source.MEDIA, "SESSION_REMOVED", "com.spotify.tv.android"), audio(65, 0))
+        assertEquals(15L, duration(periods, Category.WATCHING))
     }
 
     @Test fun `observed 15 minute heartbeat cadence keeps full evening covered`() {
