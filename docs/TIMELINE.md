@@ -19,6 +19,8 @@ IDLE og HDMI har hver sin sum. Råhendelsene endres eller slettes aldri av bereg
   en kjent skjermsparer. Et allerede påvist hull eller en frakoblet lytter har
   fortsatt prioritet over IDLE. Ved oppvåkning starter en ny 35-minuttersfrist.
   Ellers ville normal skjermsparer etter 35 minutter alltid bli «Ukjent».
+  Strømbrudd mens skjermspareren går kan dermed ikke tidfestes sikkert med dagens
+  hjerteslag; det krever at innsamleren også bekrefter liveness under skjermsparer.
 - **Støy:** RESEARCH nevner innstillinger og Downloader som støy. SPEC v2 sier
   uttrykkelig at de skal vises med appnavn; beregningen følger SPEC.
 - **Tidspunkter i testene:** RESEARCH inneholder signalrekkefølge og utvalgte
