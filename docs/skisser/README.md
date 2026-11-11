@@ -4,7 +4,9 @@ Referanseskisser for skjermene. Filene er HTML-maler fra et designverktøy: layo
 
 | Fil | Skjerm | SPEC |
 |---|---|---|
-| `Main.dc.html` | I dag – oppsummering, døgnstripe, tidslinje | 5.1 |
+| `Oversikt.png` / `Oversikt.html` | Oversikt – startskjerm med TV-titting per økt | 5.0 |
+| `Kompakt.png` / `Kompakt.html` | Detaljert tidslinje (kompakt) | 5.1 |
+| `Main.dc.html` | Gammel hovedskjerm – bare farger og kategorinavn gjelder | – |
 | `Detalj.dc.html` | Detaljer for én app-økt, med «Grunnlag – rå signaler» | 5.2 |
 | `Igaar.dc.html` | Tidligere dag, med varsel om hull i loggen | 5.3 |
 | `Oppsett.dc.html` | Første oppstart – to tillatelser | 5.4 |

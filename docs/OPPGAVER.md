@@ -105,12 +105,39 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 
 ---
 
+## Oppgave 5 – Oversikt, PIN og rettelser
+
+Nivå **Middels**. Produktvalg 11.11: ny startskjerm som bare viser TV-titting, PIN-kode, og riktig «første påslag».
+
+```
+Les AGENTS.md og docs/SPEC.md (særlig 5.0, 5.1 og 5.6). Gjør dette:
+
+1. Ny startskjerm «Oversikt» etter SPEC 5.0 og skissen docs/skisser/Oversikt.png (kilde Oversikt.html):
+   - Stort tall «TV-titting i dag» (bare WATCHING), «N økter · første påslag hh:mm».
+   - Én rad per økt, eldste øverst: tidsrom, appnavn, minutter sett. Ingen «av N»-tekst.
+   - Streken teller opp mot dagens total i én farge: rad i fyller fra 0 til (sum av økt 1..i) / total. Siste rad er full.
+   - Økt-regel (ren Kotlin, f.eks. SessionBuilder): perioder fra samme pakke slås sammen når avbruddene er ≤ 5 min og det ikke er avspilling i en annen app imellom. Vis bare økter med ≥ 1 min WATCHING. HDMI/TV-kanaler er ikke økter, bare sum i bunnlinjen sammen med «Sto bare på».
+   - Økter før appen fulgte med: grå, «avspilling ukjent», teller ikke.
+   - OK → detaljer for hele økten. Ned fra siste rad → dagens detaljerte tidslinje (dagens «I dag»-skjerm). Tilbake: detaljer → forrige skjerm, tidslinje → Oversikt, Oversikt → lukk. Venstre/høyre bytter dag.
+   - Tester: økt-sammenslåing (pause og kort tur til startskjerm innenfor samme økt, ny økt etter > 5 min, avspilling i annen app avslutter økten), kumulativ strek, tom dag.
+2. PIN-kode etter SPEC 5.6: velg PIN første gang, tallknapper + piltaster, prikker, 5 feil → 1 min pause, låses når appen går i bakgrunnen, lagres som saltet hash. Nullstilling bare fra adb via mottaker beskyttet med android.permission.DUMP. Diagnoseskjermen (hold OK) ligger også bak PIN. Ingen nye tillatelser, ingen INTERNET.
+3. «Første påslag»: hvis TV-en var på ved midnatt (skjerm på / app i forgrunnen fra før 00:00), skal «Første påslag» være første gang skjermen ble slått på igjen etter å ha vært av, ikke 00:00. Eksempel 11.11: på fra før midnatt → standby 04:38 → omstart 04:48–04:50 (teller ikke, punkt 9 i Oppgave 4) → på 08:44. Svaret skal være 08:44. Hvis TV-en aldri var av hele dagen: vis «på fra i går». Test for dette.
+4. Fra review av PR #6:
+   a. firstMeaningfulOn: DREAMING_STOPPED uten samtidig skjerm-på mens skjermen er av = avslag (som i TimelineBuilder). Test: omstart → skjermsparer → standby → vanlig bruk 07:00 gir første påslag 07:00.
+   b. DataExport.write: ta med pending-rader i MediaStore-søket; etter insert, sjekk at DISPLAY_NAME ikke er endret (f.eks. «… (1).csv»); hvis endret: slett raden og logg EXPORT_FAILED. Utvid DataExportTest.
+5. tools/hent-tvlogg.ps1: lagre som UTF-8 med BOM, så æøå vises riktig i Windows PowerShell 5.1. Ingen andre endringer i skriptet.
+6. Oppdater README kort (PIN og nullstilling).
+
+Hvis PR-en blir over ca. 800 linjer: lag gjerne to PR-er (først punkt 3–5, så 1–2).
+```
+
+---
+
 ## Senere (bestemt, ikke startet)
 
-- **PIN-kode** (eier 11.11): fire sifre med piltastene når appen åpnes. Ikke hast. Lages etter Oppgave 4.
-- **Første påslag** (eier 11.11): hvis TV-en var på ved midnatt, er «Første påslag» første gang den ble slått på igjen etter å ha vært av (skjerm av/standby). Natten 10.–11.11 sto TV-en på HDMI fra før midnatt til 04:38 (automatisk standby); appen viste feilaktig «Første påslag 00:00».
-- **Fra review av PR #6 (Bør fikses):** `firstMeaningfulOn` skal behandle `DREAMING_STOPPED` uten skjerm-på som avslag; `DataExport` skal ikke lage «(1)»-kopier (ta med pending-rader, sjekk at `DISPLAY_NAME` ikke er endret). `hent-tvlogg.ps1` lagres som UTF-8 med BOM, så æøå vises riktig i Windows PowerShell 5.1.
 - **Sjekke hjemmefra:** produktvalg ikke tatt ennå. Appen skal fortsatt ikke ha `INTERNET`.
+- **Skjermsparer med bilder og Ruter-avganger:** egen app, ikke en del av Systemverktøy. Tas en annen gang.
+- **Ukesoversikt** (skisse B): kan komme etter Oversikt.
 
 ---
 

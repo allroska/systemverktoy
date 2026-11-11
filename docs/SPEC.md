@@ -71,7 +71,19 @@ Kjent felle: Økter må spores per activity (pakke + klasse), ikke per pakke. En
 
 Referanseskisser ligger i `docs/skisser/` (HTML). De viser layout, tekster og farger med oppdiktede eksempeldata. Skjermene er 16:9 og skal fungere fra 1280×720 til 1920×1080.
 
-### 5.1 I dag (hovedskjerm) – `docs/skisser/Kompakt.png` (kilde: `Kompakt.html`)
+### 5.0 Oversikt (startskjerm) – `docs/skisser/Oversikt.png` (kilde: `Oversikt.html`)
+Eier 11.11: rask oversikt over det som teller som TV-titting. Første skjerm etter PIN.
+- **Topplinje** (11 sp, dempet): «I dag · torsdag 12. november» til venstre, «← / → dag · OK økt · ↓ detaljer» til høyre.
+- **Stort tall:** «TV-titting i dag **2 t 9 min**» (tallet ca. 44 sp, blått `#4E95F0`), og ved siden av i dempet tekst: «4 økter · første påslag 14:02».
+- **Én rad per økt**, eldste øverst, ca. 40 dp høy, 15 sp: tidsrom (start–slutt for hele økten), blå prikk, appnavn, en tynn strek og **minutter sett** til høyre (bare minutter med avspilling, ikke tid i meny/pause). Pågående økt viser «–nå».
+- **Streken teller opp mot dagens total**, i én farge (`#4E95F0` på mørk bakgrunn): hele bredden = dagens «TV-titting». Første økt fyller sin andel. Neste økt fyller fra 0 til summen så langt, og så videre. Siste økt er alltid full.
+- **Økt:** perioder fra samme app slås sammen så lenge avbruddene (startskjerm, skjermsparer, pause, annen app uten avspilling) er 5 min eller kortere. Bare økter med minst 1 min avspilling vises. HDMI/TV-kanaler er ikke økter her.
+- **Bunnlinje:** «HDMI / TV-kanaler 1 t 20 min · Sto bare på 12 min» til venstre, «↓ Alle detaljer» til høyre.
+- Ingen titting: «Ingen TV-titting i dag.» (resten av skjermen som vanlig).
+- Ufullstendig dag eller dag før appen fulgte med: samme dempede linje som på detaljskjermen (5.1). Økter uten avspillingsdata vises grå med «avspilling ukjent» i stedet for minutter, og teller ikke.
+- OK på en økt → detaljer (5.2) for hele økten. ↓ fra siste rad (eller fra bunnlinjen) → den detaljerte tidslinjen (5.1). Venstre/høyre bytter dag her også.
+
+### 5.1 Detaljert tidslinje (tidligere «hovedskjerm») – `docs/skisser/Kompakt.png` (kilde: `Kompakt.html`)
 Kompakt layout (eier 11.11): tidslinjen skal ta mesteparten av skjermen. Målt i 960×540 dp:
 - **Linje 1** (11 sp, dempet): «I dag · onsdag 11. november» til venstre, «← / → dag · ↑ / ↓ rad · OK detaljer» til høyre. Ingen stor overskrift.
 - **Linje 2** (14 sp, tall i fet skrift): «Sett på 7 min (Netflix 4 · NRK TV 3) | Sto bare på < 1 min | HDMI 4 t 35 min | Første påslag 17:22», med liten fargefirkant foran hver sum. Ingen bokser.
@@ -102,13 +114,24 @@ Kompakt layout (eier 11.11): tidslinjen skal ta mesteparten av skjermen. Målt i
 ### 5.5 Ikon – `docs/skisser/Banner.dc.html`
 - Banner 320×180: mørk bakgrunn `#2B3640`, hvitt tannhjul, teksten «Systemverktøy».
 
+### 5.6 PIN-kode
+Eier 11.11: appen skal kreve en firesifret PIN hver gang den åpnes.
+- Første gang etter oppdatering: «Velg PIN-kode» (tast to ganger). Ingen PIN = ingen tilgang til tidslinjen.
+- Inntasting: tallknappene på fjernkontrollen, **og** piltaster (opp/ned endrer siffer, venstre/høyre flytter, OK bekrefter), siden ikke alle fjernkontroller har tall. Sifrene vises som prikker.
+- Etter 5 feil: vent 1 minutt. Ingen sletting av data.
+- Låses igjen når appen går i bakgrunnen (ikke bare ved omstart).
+- Bakgrunnsloggingen påvirkes ikke av PIN-en.
+- Glemt PIN: kan nullstilles fra PC-en med adb, f.eks. `adb shell am broadcast -a com.systemverktoy.app.RESET_PIN -n com.systemverktoy.app/.PinResetReceiver`. Mottakeren skal være beskyttet slik at bare adb/shell kan sende den (f.eks. `android:permission="android.permission.DUMP"`), ikke andre apper. Aldri `pm clear` (sletter historikken).
+- PIN lagres bare som hash (f.eks. PBKDF2 med salt), aldri i klartekst, og aldri i eksportfilene.
+
 ### Navigasjon med fjernkontroll
 | Tast | Handling |
 |---|---|
 | Venstre / høyre | Forrige / neste dag (ikke lenger enn i dag) |
 | Opp / ned | Flytt fokus i tidslinjen |
-| OK | Åpne detaljer for raden |
-| Tilbake | Fra detaljer → tidslinje. Fra tidslinje → lukk appen |
+| OK | Åpne detaljer for raden/økten |
+| Ned fra siste rad i Oversikt | Detaljert tidslinje |
+| Tilbake | Detaljer → forrige skjerm. Detaljert tidslinje → Oversikt. Oversikt → lukk appen |
 
 Fokusert rad har tydelig hvit ramme. Alt skal kunne brukes uten berøring.
 
@@ -144,7 +167,7 @@ Krav:
 Skjermene i kapittel 5 med klassifiseringen i kapittel 4, justert etter funnene fra fase 1. Rå logg beholdes som en skjult diagnoseskjerm (f.eks. holde OK inne på overskriften i 3 sekunder).
 
 ## 8. Ikke i versjon 1
-Blokkering, tidsgrenser, varsler, mobilvisning, sky-synk, flere brukere/profiler. (PIN er bestemt for en senere oppgave. Eksport til PC over hjemmenettet kommer i Oppgave 4.)
+Blokkering, tidsgrenser, varsler, mobilvisning, sky-synk, flere brukere/profiler. (PIN: se 5.6. Eksport til PC over hjemmenettet: Oppgave 4.)
 
 ## 9. Kjente begrensninger (skal være synlige for brukeren der det er relevant)
 - «Sett på» betyr at innhold ble spilt av, ikke at noen satt foran skjermen (autoplay).

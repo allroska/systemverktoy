@@ -1,0 +1,25 @@
+<!doctype html><title>Oversikt</title><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}
+body{width:960px;height:540px;background:#0F1317;color:#EEF1F4;font-family:Inter,"DejaVu Sans",sans-serif;padding:18px 32px;overflow:hidden;position:relative}
+.dim{color:#A3ADB8}.b{font-weight:700}
+.top{display:flex;justify-content:space-between;font-size:11px;color:#A3ADB8}
+.top b{color:#EEF1F4}
+.tag{position:absolute;right:12px;bottom:8px;font-size:9px;color:#56616C}
+.sess{display:grid;grid-template-columns:110px 12px 120px 1fr 120px;align-items:center;height:40px;font-size:15px;padding:0 12px;border:2px solid transparent;border-radius:8px;margin-bottom:4px;background:#182028}
+.sess.f{border-color:#fff;background:#212B35}
+.dot{width:10px;height:10px;border-radius:50%}
+.bar{height:8px;border-radius:4px;background:#2a3540;position:relative;overflow:hidden;margin-right:16px}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:#4E95F0;border-radius:4px}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.foot{position:absolute;left:32px;right:32px;bottom:22px;display:flex;justify-content:space-between;font-size:12px;color:#A3ADB8}
+.sq{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+</style><script>const S=[['14:05–14:52','NRK TV',41,47],['15:10–15:38','Netflix',26,28],['16:02–16:24','Disney+',18,22],['19:30–20:15','Netflix',44,45]];
+const W=[['fre',90,0],['lør',190,60],['søn',160,30],['man',45,95],['tir',65,20],['ons',7,275],['tor',129,80]];
+function sess(el,focus){const T=S.reduce((a,x)=>a+x[2],0);let c=0;S.forEach((s,i)=>{c+=s[2];const q=c/T*100;const d=document.createElement('div');d.className='sess'+(i==focus?' f':'');d.innerHTML=`<span class="dim">${s[0]}</span><span class="dot" style="background:#4E95F0"></span><span>${s[1]}</span><span class="bar"><i style="width:${q}%"></i></span><span class="r"><b>${s[2]} min</b></span>`;el.appendChild(d)})}
+const hm=m=>m>=60?`${Math.floor(m/60)} t ${m%60} min`:`${m} min`;
+</script><body>
+<div class="top"><div><b>I dag</b> · torsdag 12. november</div><div>← / → dag · OK økt · ↓ detaljer</div></div>
+<div style="margin-top:22px;display:flex;align-items:baseline;gap:14px"><span style="font-size:15px" class="dim">TV-titting i dag</span><span style="font-size:44px;font-weight:700;color:#4E95F0">2 t 9 min</span><span class="dim" style="font-size:14px">4 økter · første påslag 14:02</span></div>
+<div id="l" style="margin-top:22px"></div>
+<div class="foot"><span><span class="sq" style="background:#9B8AF0"></span>HDMI / TV-kanaler 1 t 20 min &nbsp;·&nbsp; <span class="sq" style="background:#56616C"></span>Sto bare på 12 min</span><span>↓ Alle detaljer</span></div>
+<div class="tag">Oversikt · oppdiktede eksempeldata</div>
+<script>sess(document.getElementById('l'),0)</script></body>
