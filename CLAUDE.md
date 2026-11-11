@@ -12,7 +12,7 @@ Les `docs/SPEC.md` (hva som skal bygges og hvorfor), `AGENTS.md` (tekniske regle
 ## Hva du ser etter, i prioritert rekkefølge
 
 1. **Bryter det appen på TV-en?** Krasj når en tillatelse mangler, bakgrunnstjeneste som dør, data som går tapt, feil som gjør at appen ikke kan installeres eller oppdateres.
-2. **Signering og identitet.** `applicationId` (`com.systemverktoy.app`), signering fra GitHub Secrets, aldri debug-signert release, asset-navnet `systemverktoy.apk`. Feil her sletter eierens historikk ved oppdatering.
+2. **Signering og identitet.** `applicationId` (`com.systemverktoy.app`), signering fra GitHub Secrets, aldri debug-signert release, asset-navnet `systemverktoy.apk`. Feil her sletter eierens historikk ved oppdatering. Sjekk også at workflow-filene under `.github/workflows/` er gyldige: f.eks. er `runner`-konteksten ikke tilgjengelig i `jobs.<id>.env`, og en ugyldig fil gjør at Release aldri kjører.
 3. **Ingen data ut.** Ingen `INTERNET`-tillatelse, nettverkskall eller biblioteker med nettverk.
 4. **Stemmer det med spesifikasjonen?** Særlig klassifiseringsreglene i SPEC kap. 4: startskjerm teller ikke som «sett på», skjermsparer = «sto bare på», pause = «app åpen», hull vises som «ukjent» og gjettes aldri over, økter spores per activity (pakke + klasse).
 5. **Riktig tid.** Dagsgrenser ved lokal midnatt, sommertid, ingen hardkodet UTC-offset.

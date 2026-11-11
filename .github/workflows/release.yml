@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,7 +12,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/systemverktoy-release.jks
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -42,6 +42,9 @@ jobs:
         shell: bash
         run: |
           umask 077
+          # runner.temp er ikke tilgjengelig i jobbens env:, så stien settes her og deles med senere steg.
+          RELEASE_KEYSTORE_PATH="$RUNNER_TEMP/systemverktoy-release.jks"
+          echo "RELEASE_KEYSTORE_PATH=$RELEASE_KEYSTORE_PATH" >> "$GITHUB_ENV"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RELEASE_KEYSTORE_PATH"
       - name: Build signed release
         run: ./gradlew :app:assembleRelease --no-daemon
