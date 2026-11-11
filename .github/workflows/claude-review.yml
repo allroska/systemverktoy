@@ -45,11 +45,11 @@ jobs:
             1. Se endringene med `gh pr diff ${{ github.event.pull_request.number }}` og PR-beskrivelsen med `gh pr view ${{ github.event.pull_request.number }} --comments`.
             2. Hvis det finnes en tidligere «## Claude-review»-kommentar, er dette en re-review: si hvilke funn som nå er rettet, og nevn bare nye eller gjenstående funn.
             3. Legg inline-kommentarer på de konkrete linjene for funn under «Må fikses» med mcp__github_inline_comment__create_inline_comment.
-            4. Skriv hele reviewen som ditt endelige svar i formatet fra CLAUDE.md (norsk, vanlig språk, «Kan merges», «Må fikses», «Bør fikses», «Kan vente», «Sjekk på TV-en etter merge», «Til Codex»). Svaret vises automatisk i sporingskommentaren på PR-en, så du skal ikke poste en egen kommentar.
+            4. Skriv hele reviewen i formatet fra CLAUDE.md (norsk, vanlig språk, «Kan merges», «Må fikses», «Bør fikses», «Kan vente», «Sjekk på TV-en etter merge», «Til Codex») INN I SPORINGSKOMMENTAREN med verktøyet mcp__github_comment__update_claude_comment. Dette er obligatorisk: uten dette kallet ser eieren bare «I'll analyze this…» og ingen review. Ikke post en egen kommentar.
 
             Du reviewer bare. Ikke endre filer, ikke push.
           claude_args: |
             --model claude-opus-5-5
             --effort high
             --max-turns 40
-            --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Glob,Grep,mcp__github_comment__update_claude_comment,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
