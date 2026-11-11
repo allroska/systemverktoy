@@ -139,8 +139,10 @@ private fun RawLog(access: Access, today: LocalDate, zone: ZoneId) {
     val oldest by repo.oldestUsage.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     var importantOnly by rememberSaveable { mutableStateOf(false) }
-    val launcher = runCatching { context.packageManager.resolveActivity(
-        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName }.getOrNull()
+    val launcher = remember(context) {
+        runCatching { context.packageManager.resolveActivity(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName }.getOrNull()
+    }
     val visibleEvents = remember(events, importantOnly, launcher) {
         if (importantOnly) events.filter { isImportantEvent(it, launcher, context.packageName) } else events
     }
@@ -220,7 +222,7 @@ private fun RawLog(access: Access, today: LocalDate, zone: ZoneId) {
                     else "Ingen viktige hendelser for denne dagen.", fontSize = 15.sp, color = Color.White)
             }
             items(visibleEvents, key = { it.id }) { event ->
-                Text(formatRawEvent(event, zone), modifier = Modifier.fillMaxWidth().height(20.dp)
+                Text(formatRawEvent(event, zone), modifier = Modifier.fillMaxWidth().heightIn(min = 20.dp)
                     .padding(horizontal = 3.dp), fontSize = 15.sp, lineHeight = 18.sp,
                     color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }

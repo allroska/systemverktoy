@@ -126,7 +126,7 @@ Krav:
 - Venstre/høyre bytter dag. Teksten må være lesbar på et fotografi tatt av TV-skjermen.
 - Råloggen vises kompakt på mørk bakgrunn (`#0F1317`) med hvit tekst og uten lyse bokser. Én linje per hendelse: klokkeslett · kilde · type · pakke · kort activity-klasse/status/tittel. Minst 15 rader skal få plass per skjerm; lange linjer avkortes med «…».
 - Listen går til toppen når appen åpnes, dagen eller filteret endres, eller nye hendelser kommer. Nyeste hendelse vises først.
-- Knappen «Bare viktige» filtrerer kun visningen: skjuler launcherens og Systemverktøys egne app-hendelser, men beholder MEDIA for andre apper, DREAM, AUDIO, LISTENER, skjerm av/på og USAGE for andre apper. Globale signaler beholdes også uten pakkenavn. Filteret er av i utgangspunktet.
+- Knappen «Bare viktige» filtrerer kun visningen: skjuler launcherens og Systemverktøys egne app-hendelser, men beholder MEDIA for andre apper, DREAM, AUDIO, LISTENER, skjerm av/på og USAGE for andre apper. APP-hendelsene `BOOT_COMPLETED`, `IMPORT_FAILED`, `USAGE_ACCESS_REVOKED` og `heartbeat` beholdes også, med eller uten eget pakkenavn, slik at oppstart, feil og hjerteslag fortsatt forklarer mulige hull i loggen. `APP_OPENED` skjules. Globale signaler beholdes også uten pakkenavn. Filteret er av i utgangspunktet.
 - Kanal opp/ned blar én synlig loggside om gangen. Opp/ned blar én rad når listen har fokus; opp fra toppen går til filterknappen. Venstre/høyre bytter fortsatt dag.
 - Logging skal skje kontinuerlig i bakgrunnen, ikke bare når appen er åpen. Tre tiltak for å holde den i gang og gjøre bortfall synlig: **hjerteslag** ca. hvert 15. minutt mens skjermen er på, **start ved oppstart** av TV-en, og **visning av strømsparingsstatus** (se AGENTS.md, «Bakgrunn»).
 

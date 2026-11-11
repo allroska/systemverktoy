@@ -25,8 +25,18 @@ class RawLogPresentationTest {
         for (type in listOf("SCREEN_ON", "SCREEN_OFF", "SCREEN_INTERACTIVE (15)", "SCREEN_NON_INTERACTIVE (16)")) {
             assertTrue(isImportantEvent(RawEvent(source = Source.APP, type = type, packageName = own), launcher, own))
         }
-        assertFalse(isImportantEvent(RawEvent(source = Source.APP, type = "heartbeat"), launcher, own))
+        assertFalse(isImportantEvent(RawEvent(source = Source.APP, type = "APP_OPENED", packageName = own), launcher, own))
         assertTrue(isImportantEvent(RawEvent(source = Source.USAGE, type = "ACTIVITY_RESUMED", packageName = "example.player"), null, own))
+    }
+
+    @Test fun importantFilterKeepsAppDiagnosticsWithAndWithoutOwnPackage() {
+        for (type in listOf("BOOT_COMPLETED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat")) {
+            for (pkg in listOf(null, own)) {
+                assertTrue("$type ($pkg)", isImportantEvent(
+                    RawEvent(source = Source.APP, type = type, packageName = pkg), launcher, own))
+            }
+        }
+        assertFalse(isImportantEvent(RawEvent(source = Source.APP, type = "APP_OPENED"), launcher, own))
     }
 
     @Test fun compactLineKeepsFieldsAndUsesLocalTimeWithoutEmbeddedNewlines() {

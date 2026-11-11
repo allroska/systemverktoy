@@ -7,6 +7,9 @@ import java.time.format.DateTimeFormatter
 /** Presentation only; the stored raw events are never modified. */
 internal fun isImportantEvent(event: RawEvent, launcher: String?, ownPackage: String): Boolean {
     val type = event.type.substringBefore(" (")
+    if (event.source == Source.APP && type in setOf(
+            "BOOT_COMPLETED", "IMPORT_FAILED", "USAGE_ACCESS_REVOKED", "heartbeat",
+        )) return true
     // Global signals may have no package, or refer to the listener's own package.
     if (event.source in setOf(Source.DREAM, Source.AUDIO, Source.LISTENER) ||
         type in setOf("SCREEN_ON", "SCREEN_OFF", "SCREEN_INTERACTIVE", "SCREEN_NON_INTERACTIVE")) return true
