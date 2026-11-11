@@ -91,6 +91,7 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
 3. Feil ved eksport skal aldri krasje appen; logg APP-hendelsen EXPORT_FAILED.
 4. Enhetstester for CSV-formatet (escaping av komma/anførselstegn, tidssone).
 5. Oppdater README med kort om eksport og tools/hent-tvlogg.ps1.
+6. Tidslinje før lytteren fantes: perioder før første onListenerConnected noensinne (f.eks. historikk hentet fra Android fra før appen ble installert) har ingen avspillingsdata. De skal ikke vises som «App åpen, ingenting spilt», men som «App åpen – avspilling ukjent» (egen undertekst, samme gule farge, teller ikke i «Sett på»). Detaljskjermen skal forklare: «Appen fulgte ikke med på avspilling før <dato kl>.» Test for dette.
 ```
 
 ---

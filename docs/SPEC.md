@@ -60,7 +60,7 @@ Prioritet når flere regler treffer samtidig: `UNKNOWN` > `IDLE` > `OFF` > `HDMI
    - Forhåndsvisninger (andre Netflix-profiler kan ha dem på): sammenhengende `PLAYING`-perioder **kortere enn 60 sekunder** telles som `APP_OPEN`, ikke `WATCHING`.
    - **Korte avbrudd slås sammen:** bufring eller annet avbrudd i avspillingen som varer **under 30 sekunder** i samme app teller som én sammenhengende `WATCHING`-periode (produktvalg 11.11). Sammenslåingen skjer før 60-sekundersregelen.
 5. `HOME`: `com.google.android.apps.tv.launcherx` i forgrunnen. Lyd/trailere der ignoreres.
-6. `APP_OPEN`: annen app i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon). Innstillinger, Downloader o.l. vises med appnavn.
+6. `APP_OPEN`: annen app i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon). Innstillinger, Downloader o.l. vises med appnavn. **Unntak:** før første `onListenerConnected` noensinne finnes ingen avspillingsdata – da vises «App åpen – avspilling ukjent», ikke «ingenting spilt».
 7. `UNKNOWN`: skjermen er på, men det mangler hjerteslag i mer enn 35 minutter, eller lytteren er frakoblet. Appen gjetter aldri over hull.
 
 Støy som ignoreres i tidslinjen (beholdes i rå logg): USAGE `EVENT_11`, `EVENT_12`, `EVENT_14` og andre hendelsestyper enn ACTIVITY_*/SCREEN_*/DEVICE_*; pakkene `android`, `com.android.systemui`, `com.google.android.gsf`, `com.google.android.tungsten.setupwraith`, `com.sony.dtv.*` bortsett fra `tvx`.
