@@ -33,20 +33,20 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | # | Resultat | Kommentar |
 |---|---|---|
 | 1 | OK (11.11, v1.0.8) | Begge tillatelser på, lytter tilkoblet. «Tilgang til varsler» måtte slås på via TV-ens innstillinger: fjernkontrollen virket ikke da appen åpnet siden direkte (ingen fokus). |
-| 2 | | |
-| 3 | | |
-| 4 | | |
+| 2 | OK (11.11) | Netflix og NRK TV gir USAGE med pakke + activity. Netflix bruker samme MainActivity for meny og avspiller. |
+| 3 | OK (11.11) | Netflix og NRK: spiller/pauset/stoppet kommer presist. Ingen titler (Spotify har tittel). AUDIO media_active 1/0 følger pause. YouTube blokkert på TV-en. |
+| 4 | OK (11.11, én profil) | Ca. 3 min i Netflix-menyen ga ingen «spiller». Andre profiler ikke testet. |
 | 5 | | |
-| 6 | | |
+| 6 | OK (11.11) | DREAMING_STARTED/STOPPED + dreamx DreamActivity i USAGE. Skjermsparer gir også SCREEN_NON_INTERACTIVE. |
 | 7 | | |
 | 8 | | |
 | 9 | | |
 | 10 | | |
-| 11 | | |
-| 12 | | |
+| 11 | Delvis (11.11) | HDMI 4 = com.sony.dtv.tvx med MediaSession «HDMI 4» STATE_PLAYING så lenge inngangen er valgt. Vanlige TV-kanaler ikke testet. |
+| 12 | OK (11.11) | v1.0.8 → v1.0.10 beholdt data; lytter koblet til igjen automatisk. |
 | 13 | | |
 | 14 | | |
-| 15 | | |
+| 15 | OK (11.11) | Hjerteslag presist hvert 15. min. |
 | 16 | | |
 | 17 | | |
 | 18 | | |

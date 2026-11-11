@@ -74,6 +74,22 @@ Oppsummert fra research gjort før prosjektstart (november 2026). Status:
 | Appen er ikke unntatt batterioptimalisering (standard) | Bekreftet – følg med på hjerteslag |
 | Når appen åpner innstillingssiden for varseltilgang direkte, får ingen elementer fokus og fjernkontrollen virker ikke. Via TV-ens innstillinger (Apper → Spesiell apptilgang) virker det. | Bekreftet |
 
+### Kveldstest 11.11 (v1.0.10, 17:19–18:31)
+
+| Fakta | Status |
+|---|---|
+| **Netflix** (`com.netflix.ninja`): `SESSION_ADDED`/`STATE_PLAYING` ved start, `STATE_PAUSED` ved pause, `STATE_STOPPED` + `SESSION_REMOVED` når man går tilbake til menyen. Ingen tittel. | Bekreftet |
+| **Netflix bruker samme activity (`MainActivity`) for meny og avspiller.** Activity-klasse kan derfor *ikke* skille meny fra avspilling – det må MediaSession-status gjøre. | Bekreftet |
+| **Netflix-meny i ca. 3 min (17:27:54–17:31:10) ga ingen «spiller»-hendelser** på eierens profil. Andre profiler kan ha forhåndsvisning på – ikke testet. | Bekreftet (én profil) |
+| **NRK TV** (`no.nrk.tv`, `MainActivityTv`): `SESSION_ADDED` (`STATE_NONE`) → `STATE_BUFFERING` → `STATE_PLAYING`, pause gir `STATE_PAUSED`. Ingen tittel. Ny episode gir `SESSION_REMOVED` + ny `SESSION_ADDED`. | Bekreftet |
+| **Spotify** sender status og tittel. | Bekreftet |
+| **AUDIO** `media_active=1; usage=1, content=3` ved avspilling, `media_active=0` ved pause – pause gir altså egen AUDIO-rad. | Bekreftet |
+| **Skjermsparer:** `SCREEN_NON_INTERACTIVE (16)` + `DREAMING_STARTED` + `dreamx/DreamActivity` RESUMED samtidig; ved oppvåkning `SCREEN_INTERACTIVE (15)` + `DREAMING_STOPPED`. **Skjermsparer gir altså SCREEN_NON_INTERACTIVE** – klassifiseringen må ikke tolke det som «av» når DREAM er aktiv. | Bekreftet |
+| **HDMI-inngang:** `com.sony.dtv.tvx` `MainActivity` + MediaSession `STATE_PLAYING` med tittel «HDMI 4» så lenge inngangen er valgt (uansett hva konsollen viser). Ved bytte bort: `STATE_NONE` + `SESSION_REMOVED`. | Bekreftet |
+| **Hjerteslag** kom presist hvert 15. minutt (17:15:36 … 18:30:37). | Bekreftet |
+| **Oppdatering** v1.0.8 → v1.0.10 via Downloader beholdt databasen; lytteren koblet seg til igjen (`onListenerConnected`) få sekunder etter installasjon. | Bekreftet |
+| **Støy** i USAGE: `EVENT_11` (standby-bøtte), `EVENT_12`, `EVENT_14` for mange system- og Sony-pakker, samt `packageinstaller`, `permissioncontroller`, `com.android.tv.settings`, `com.esaba.downloader`. Bør skjules i fase 2. | Bekreftet |
+
 ## Kilder (utvalg)
 - AOSP `UsageStatsDatabase.java` – lagringstid
 - developer.android.com: `UsageStatsManager`, `UsageEvents.Event`, `NotificationListenerService`, `MediaSessionManager`, `AudioManager`
