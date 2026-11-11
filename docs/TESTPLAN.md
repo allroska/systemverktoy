@@ -30,7 +30,7 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 
 | # | Resultat | Kommentar |
 |---|---|---|
-| 1 | | |
+| 1 | OK (11.11, v1.0.8) | Begge tillatelser på, lytter tilkoblet. «Tilgang til varsler» måtte slås på via TV-ens innstillinger: fjernkontrollen virket ikke da appen åpnet siden direkte (ingen fokus). |
 | 2 | | |
 | 3 | | |
 | 4 | | |

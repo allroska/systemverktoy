@@ -63,6 +63,17 @@ Oppsummert fra research gjort før prosjektstart (november 2026). Status:
 | Googles krav om verifiserte utviklere for sideinstallerte apper gjelder foreløpig bare mobil/nettbrett i utvalgte land; planlagt utvidet globalt i 2027. Reserveveier: gratis «limited distribution»-konto, avansert flyt, eller adb. | Bekreftet (Google, nov. 2026) |
 | AGP 9.4.x krever Gradle 9.6.0 og JDK 17; Kotlin er innebygd i AGP 9 | Bekreftet |
 
+## Funn fra testappen (v1.0.8, 11.11.2026)
+
+| Fakta | Status |
+|---|---|
+| Valgt skjermsparer: `com.google.android.apps.tv.dreamx/.service.Backdrop` | Bekreftet |
+| Launcher (startskjerm): `com.google.android.apps.tv.launcherx` (`.home.HomeActivity`) | Bekreftet |
+| Eldste hendelse i Androids logg ved første lesing: 01.11 18:57 (ca. 10 dager) | Bekreftet |
+| `USAGE`-hendelser kommer med activity-klasse | Bekreftet |
+| Appen er ikke unntatt batterioptimalisering (standard) | Bekreftet – følg med på hjerteslag |
+| Når appen åpner innstillingssiden for varseltilgang direkte, får ingen elementer fokus og fjernkontrollen virker ikke. Via TV-ens innstillinger (Apper → Spesiell apptilgang) virker det. | Bekreftet |
+
 ## Kilder (utvalg)
 - AOSP `UsageStatsDatabase.java` – lagringstid
 - developer.android.com: `UsageStatsManager`, `UsageEvents.Event`, `NotificationListenerService`, `MediaSessionManager`, `AudioManager`
