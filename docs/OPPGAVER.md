@@ -76,6 +76,23 @@ PR B – skjermer (når PR A er merget):
 Si fra under «Åpne spørsmål» hvis noe i SPEC ikke stemmer med dataene – ikke endre SPEC-en stille.
 ```
 
+## Oppgave 4 – Eksport til PC (alternativ B)
+
+Nivå **Middels**. Produktvalg 11.11: data skal fortsatt aldri sendes ut på nett (ingen `INTERNET`-tillatelse), men eieren skal kunne hente en fil til PC-en over hjemmenettet med `tools/hent-tvlogg.ps1`.
+
+```
+Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil på TV-en, uten å legge til INTERNET-tillatelse eller nye nettverksbiblioteker:
+
+1. Appen skriver eksportfiler til Download/Systemverktoy/ via MediaStore.Downloads (ingen lagringstillatelse trengs på Android 12). Filene overskrives hver gang:
+   - systemverktoy-raa.csv: alle rå hendelser de siste 14 dagene (tid ISO 8601 med offset, kilde, type, pakke, activity-klasse, status, tittel, detaljer).
+   - systemverktoy-tidslinje.csv: perioder fra TimelineBuilder for de siste 14 dagene (dag, start, slutt, kategori, app, varighet i sekunder, grunnlag).
+   - systemverktoy-diagnose.txt: innholdet i diagnoseboksen + appversjon + eksporttidspunkt.
+2. Eksport skjer automatisk når appen åpnes, og én gang i døgnet via WorkManager. I diagnoseskjermen (skjult rålogg): knapp «Eksporter nå» med bekreftelse «Eksportert hh:mm».
+3. Feil ved eksport skal aldri krasje appen; logg APP-hendelsen EXPORT_FAILED.
+4. Enhetstester for CSV-formatet (escaping av komma/anførselstegn, tidssone).
+5. Oppdater README med kort om eksport og tools/hent-tvlogg.ps1.
+```
+
 ---
 
 ## Maler
