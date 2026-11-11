@@ -41,15 +41,36 @@ internal fun dayReport(batch: HistoryBatch, day: LocalDate, zone: ZoneId, now: L
     val input = timelineInput(batch.events.filter { it.time in window.floor..minOf(window.end, now) }, bounds.start)
     val all = TimelineBuilder().build(input, day, zone, minOf(window.end, now))
     val dayEvents = input.filter { it.time in bounds && it.time <= now }
-    val firstOn = dayEvents.firstOrNull { it.type.substringBefore(' ') in setOf("SCREEN_INTERACTIVE", "SCREEN_ON", "DEVICE_STARTUP", "BOOT_COMPLETED") }?.time
-        ?: all.firstOrNull()?.takeIf { it.start == bounds.start && it.category != Category.UNKNOWN }?.start
-    val checkpoint = input.any { it.time < bounds.start && it.source == Source.USAGE &&
-        it.type.substringBefore(' ') in setOf("DEVICE_STARTUP", "DEVICE_SHUTDOWN") }
+    val firstKnown = all.firstOrNull { it.category != Category.UNKNOWN }
+    val firstOn = firstKnown?.start?.takeIf { it == bounds.start }
+        ?: dayEvents.firstOrNull { it.type.substringBefore(' ') in setOf("SCREEN_INTERACTIVE", "SCREEN_ON", "DEVICE_STARTUP", "BOOT_COMPLETED") }?.time
+        ?: firstKnown?.start
     return DayReport(all.filter { it.packageName != ownPackage }, input, firstOn,
         all.isNotEmpty() || dayEvents.any { it.type.substringBefore(' ') in setOf(
             "SCREEN_ON", "SCREEN_INTERACTIVE", "ACTIVITY_RESUMED", "heartbeat", "DREAMING_STARTED") },
         batch.oldest == null || batch.oldest >= bounds.endExclusive,
-        !checkpoint && batch.oldest?.let { it < window.floor } == true)
+        !hasContextReset(input, bounds.start) && batch.oldest?.let { it < window.floor } == true)
+}
+
+/** Warning only: standby clears foreground/playback too, but a dream does not.
+ * Batch simultaneous signals so dream start + screen off is independent of order. */
+private fun hasContextReset(events: List<RawEvent>, dayStart: Long): Boolean {
+    var dreaming = false
+    for (batch in events.filter { it.time <= dayStart }.groupBy { it.time }.values) {
+        var off = false
+        for (event in batch) {
+            val type = event.type.substringBefore(' ')
+            when {
+                event.source == Source.USAGE && type in setOf("DEVICE_STARTUP", "DEVICE_SHUTDOWN") -> return true
+                type == "DREAMING_STARTED" || (type == "ACTIVITY_RESUMED" &&
+                    event.packageName == "com.google.android.apps.tv.dreamx" && event.activity?.substringAfterLast('.') == "DreamActivity") -> dreaming = true
+                type in setOf("DREAMING_STOPPED", "SCREEN_INTERACTIVE", "SCREEN_ON") -> dreaming = false
+                type in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF") -> off = true
+            }
+        }
+        if (off && !dreaming) return true
+    }
+    return false
 }
 
 internal fun selectedDay(selected: String?, today: LocalDate): LocalDate =

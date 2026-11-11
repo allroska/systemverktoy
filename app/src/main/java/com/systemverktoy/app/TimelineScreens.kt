@@ -60,18 +60,26 @@ private fun tint(category: Category) = when (category) {
 
 @Composable
 internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId, report: DayReport?,
-    appName: (String) -> String, onMove: (Long) -> Unit, onOpen: (TimelinePeriod) -> Unit, onDiagnostics: () -> Unit) {
+    appName: (String) -> String, onMove: (Long) -> Unit, onOpen: (TimelinePeriod) -> Unit, onDiagnostics: () -> Unit,
+    list: LazyListState = rememberLazyListState(), focusedAnchor: Long? = null, onRowFocus: (Long) -> Unit = {}) {
     val heading = remember { FocusRequester() }
     val first = remember { FocusRequester() }
-    val list = rememberLazyListState()
+    val restored = remember { FocusRequester() }
+    val focusIndex = report?.periods?.indexOfFirst { focusedAnchor != null && focusedAnchor >= it.start && focusedAnchor < it.endExclusive }
+        ?.coerceAtLeast(0) ?: 0
     val inputMode = LocalInputModeManager.current
     var needsFocus by remember(day) { mutableStateOf(true) }
     LaunchedEffect(day, report != null) {
         if (report != null && needsFocus) {
             inputMode.requestInputMode(InputMode.Keyboard)
-            list.scrollToItem(0)
             withFrameNanos { }
-            if (report.periods.isEmpty()) heading.requestFocus() else first.requestFocus()
+            if (report.periods.isEmpty()) heading.requestFocus() else {
+                if (list.layoutInfo.visibleItemsInfo.none { it.index == focusIndex }) {
+                    list.scrollToItem(focusIndex)
+                    withFrameNanos { }
+                }
+                if (focusIndex == 0) first.requestFocus() else restored.requestFocus()
+            }
             needsFocus = false
         }
     }
@@ -126,8 +134,11 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
             }
             itemsIndexed(report.periods, key = { _, row -> row.start }) { index, row ->
                 PeriodRow(row, zone, rowName(row, appName),
-                    (if (index == 0) Modifier.focusRequester(first).focusProperties { up = heading } else Modifier)
-                        .testTag("period-${row.start}")) { onOpen(row) }
+                    (when (index) {
+                        0 -> Modifier.focusRequester(first).focusProperties { up = heading }
+                        focusIndex -> Modifier.focusRequester(restored)
+                        else -> Modifier
+                    }).testTag("period-${row.start}"), onFocus = { onRowFocus(row.start) }) { onOpen(row) }
             }
         }
         Text("«Sett på» betyr avspilling, også automatisk avspilling.", fontSize = 15.sp, color = muted)
@@ -176,9 +187,9 @@ private fun rowName(row: TimelinePeriod, appName: (String) -> String): String = 
 }
 
 @Composable
-private fun PeriodRow(row: TimelinePeriod, zone: ZoneId, name: String, modifier: Modifier, onClick: () -> Unit) {
+private fun PeriodRow(row: TimelinePeriod, zone: ZoneId, name: String, modifier: Modifier, onFocus: () -> Unit, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    Row(modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
+    Row(modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused; if (it.isFocused) onFocus() }
         .border(2.dp, if (focused) ink else Color.Transparent, shape)
         .background(if (focused) focusPanel else Color.Transparent, shape).clickable(onClick = onClick)
         .padding(14.dp, 10.dp), verticalAlignment = Alignment.CenterVertically,
