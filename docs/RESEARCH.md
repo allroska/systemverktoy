@@ -90,6 +90,15 @@ Oppsummert fra research gjort før prosjektstart (november 2026). Status:
 | **Oppdatering** v1.0.8 → v1.0.10 via Downloader beholdt databasen; lytteren koblet seg til igjen (`onListenerConnected`) få sekunder etter installasjon. | Bekreftet |
 | **Støy** i USAGE: `EVENT_11` (standby-bøtte), `EVENT_12`, `EVENT_14` for mange system- og Sony-pakker, samt `packageinstaller`, `permissioncontroller`, `com.android.tv.settings`, `com.esaba.downloader`. Bør skjules i fase 2. | Bekreftet |
 
+### Androids egen logg via adb (11.11, `dumpsys usagestats`)
+- `adb shell dumpsys usagestats` viser Androids hendelser siste 24 t uten appen. Appens egne MEDIA/DREAM/LISTENER/APP-hendelser finnes ikke der.
+- **Nattlig omstart:** 04:38 skjerm av → 04:48:12 `DEVICE_SHUTDOWN` → 04:48:47 `SCREEN_INTERACTIVE` + `com.android.tv.settings/.system.FallbackHome` → `DEVICE_STARTUP` → launcher `HomeActivity`/`ProfileChooserActivity` → 04:50:56 skjerm av. Varer over 2 min, uten at noen bruker TV-en.
+- Launcherens `coreservices.bootmode.DispatchActivity` dukker opp rett etter hver `SCREEN_NON_INTERACTIVE` og ved skjerm på. Den er ikke brukeraktivitet.
+- **Skjermsparer:** `SCREEN_NON_INTERACTIVE` og så `com.google.android.apps.tv.dreamx/android.service.dreams.DreamActivity` (13:09:07, 17:39:38). Avsluttes med `SCREEN_INTERACTIVE` + `HomeActivity`.
+- **Sony TV-appen** (`com.sony.dtv.tvx/.MainActivity`) brukes både for HDMI og TV-kanaler. Hvilken kilde det er, krever MediaSession-tittel.
+- Netflix og NRK TV har én activity hver i bruk (`com.netflix.ninja.MainActivity`, `no.nrk.tv.androidtv.MainActivityTv`, i tillegg til splash). Activity-navnet skiller ikke meny fra avspilling.
+- Hendelsestyper siste 24 t: STANDBY_BUCKET_CHANGED (925), ACTIVITY_RESUMED/PAUSED/STOPPED (~180 hver), SLICE_PINNED, NOTIFICATION_INTERRUPTION, FOREGROUND_SERVICE_START/STOP, SCREEN_* (5+5), CONFIGURATION_CHANGE, DEVICE_SHUTDOWN/STARTUP, USER_UNLOCKED. Ingen KEYGUARD-hendelser.
+
 ## Kilder (utvalg)
 - AOSP `UsageStatsDatabase.java` – lagringstid
 - developer.android.com: `UsageStatsManager`, `UsageEvents.Event`, `NotificationListenerService`, `MediaSessionManager`, `AudioManager`

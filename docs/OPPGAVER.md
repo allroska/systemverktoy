@@ -100,7 +100,7 @@ Les AGENTS.md og docs/SPEC.md (kap. 6 og 8). Legg til eksport av data til fil p�
    - Døgnstripe 8 dp høy med små timetall under.
    - Tidslinje-rader: én linje hver, ca. 28 dp høye, 13 sp. Fokusert rad: hvit ramme.
    Compose-UI-test at minst 12 rader er synlige i 960×540 dp.
-9. «Første gang slått på» skal ikke telle korte systemoppvåkninger: perioder under 2 minutter der bare systemapper (com.android.tv.settings, launcher uten tastetrykk, Sony-systempakker) er i forgrunnen, skal ikke regnes som påslag (eksempel fra TV-en: «Innstillinger 04:48–04:48 < 1 min» midt på natten – bekreftet at ingen var våkne, altså TV-en selv). Periodene vises fortsatt i tidslinjen. Test for dette.
+9. «Første gang slått på» skal ikke telle TV-ens egne oppvåkninger. Androids logg 11.11 viser at 04:48 var en automatisk omstart: DEVICE_SHUTDOWN 04:48:12 → SCREEN_INTERACTIVE + com.android.tv.settings/.system.FallbackHome 04:48:47 → DEVICE_STARTUP → launcher HomeActivity/ProfileChooserActivity → SCREEN_NON_INTERACTIVE 04:50:56 (over 2 min!). Regel: en skjerm-på-periode teller ikke som påslag hvis den starter innen 1 min etter DEVICE_STARTUP, eller hvis bare systempakker (com.android.tv.settings, launcher-klassene FallbackHome/DispatchActivity/HomeActivity/ProfileChooserActivity, Sony-systempakker) er i forgrunnen og skjermen går av igjen innen 5 min. Periodene vises fortsatt i tidslinjen. Tester for begge, med eksempelet over.
 ```
 
 ---
