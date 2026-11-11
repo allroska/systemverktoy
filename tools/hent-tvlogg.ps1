@@ -1,4 +1,4 @@
-# Henter eksportfilene fra Systemverktøy på TV-en til PC-en, og kan installere nyeste versjon.
+﻿# Henter eksportfilene fra Systemverktøy på TV-en til PC-en, og kan installere nyeste versjon.
 # Bruk:  .\tools\hent-tvlogg.ps1 -Tv 192.168.1.50          (bare hent logg)
 #        .\tools\hent-tvlogg.ps1 -Tv 192.168.1.50 -Installer   (installer nyeste APK først)
 param(

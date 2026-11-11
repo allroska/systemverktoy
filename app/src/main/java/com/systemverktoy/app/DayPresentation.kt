@@ -22,6 +22,7 @@ internal data class DayReport(
     val periods: List<TimelinePeriod>, val raw: List<RawEvent>,
     val firstOn: Long?, val hasActivity: Boolean, val beforeHistory: Boolean, val limitedContext: Boolean,
     val firstListener: Long? = null, val monitoringStart: Long? = null,
+    val onFromYesterday: Boolean = false,
 ) {
     fun total(category: Category) = periods.filter { it.category == category }.sumOf { it.durationMillis }
     val watchingByApp get() = periods.filter { it.category == Category.WATCHING }
@@ -54,7 +55,10 @@ internal fun dayReport(batch: HistoryBatch, day: LocalDate, zone: ZoneId, now: L
         all.isNotEmpty() || dayEvents.any { it.type.substringBefore(' ') in setOf(
             "SCREEN_ON", "SCREEN_INTERACTIVE", "ACTIVITY_RESUMED", "heartbeat", "DREAMING_STARTED") },
         batch.oldest == null || batch.oldest >= bounds.endExclusive,
-        !hasContextReset(input, bounds.start) && batch.oldest?.let { it < window.floor } == true, batch.firstListener, batch.monitoringStart)
+        !hasContextReset(input, bounds.start) && batch.oldest?.let { it < window.floor } == true, batch.firstListener, batch.monitoringStart,
+        all.firstOrNull()?.start == bounds.start && all.firstOrNull()?.category != Category.UNKNOWN &&
+            input.any { it.time < bounds.start && it.type.substringBefore(' ') in setOf("ACTIVITY_RESUMED", "SCREEN_ON", "SCREEN_INTERACTIVE") } &&
+            firstOn == null && !standbyTimes(input).any { it in bounds })
 }
 
 /** Warning only: standby clears foreground/playback too, but a dream does not.
@@ -140,16 +144,7 @@ internal fun categoryText(period: TimelinePeriod): String = when (period.categor
 /** Group by actual standby, so gaps in foreground evidence or a delayed startup
  * event cannot turn one automatic reboot into multiple apparent power-ons. */
 internal fun firstMeaningfulOn(rows: List<TimelinePeriod>, events: List<RawEvent>, dayStart: Long): Long? {
-    var dreaming = false
-    val offTimes = mutableListOf<Long>()
-    events.groupBy { it.time }.toSortedMap().forEach { (time, batch) ->
-        if (batch.any { it.type.substringBefore(' ') == "DREAMING_STARTED" ||
-            (it.packageName == "com.google.android.apps.tv.dreamx" && it.activity?.substringAfterLast('.') == "DreamActivity" &&
-                it.type.startsWith("ACTIVITY_RESUMED")) }) dreaming = true
-        if (batch.any { it.type.substringBefore(' ') in setOf("DREAMING_STOPPED", "SCREEN_INTERACTIVE", "SCREEN_ON") }) dreaming = false
-        if (batch.any { it.type.startsWith("DEVICE_SHUTDOWN") } ||
-            (!dreaming && batch.any { it.type.substringBefore(' ') in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF") })) offTimes += time
-    }
+    val offTimes = standbyTimes(events)
     val bouts = mutableListOf<MutableList<TimelinePeriod>>()
     rows.forEach { row ->
         val previous = bouts.lastOrNull()?.last()
@@ -164,6 +159,9 @@ internal fun firstMeaningfulOn(rows: List<TimelinePeriod>, events: List<RawEvent
             ?: events.lastOrNull { it.time > previousOff && it.time <= known.start &&
                 it.type.substringBefore(' ') in setOf("DEVICE_STARTUP", "BOOT_COMPLETED") }?.time
         val wakeStart = powerOn ?: known.start
+        // A bout carried across midnight is not a new power-on today.
+        if (wakeStart < dayStart || known.start == dayStart && powerOn == null &&
+            events.any { it.time < dayStart && it.type.startsWith("ACTIVITY_RESUMED") }) return@firstNotNullOfOrNull null
         // Android can persist DEVICE_STARTUP just after SCREEN_INTERACTIVE.
         val bootWake = events.any { it.type.substringBefore(' ') == "DEVICE_STARTUP" &&
             it.time >= wakeStart - 60_000 && it.time <= wakeStart + 60_000 }
@@ -189,3 +187,26 @@ internal fun monitoringText(report: DayReport, day: LocalDate, zone: ZoneId): St
 
 internal fun dateClockText(time: Long, zone: ZoneId): String = Instant.ofEpochMilli(time).atZone(zone)
     .format(DateTimeFormatter.ofPattern("d. MMMM yyyy 'kl.' HH:mm", java.util.Locale.forLanguageTag("nb")))
+
+private fun standbyTimes(events: List<RawEvent>): List<Long> {
+    var dreaming = false
+    var screenOn = false
+    val offTimes = mutableListOf<Long>()
+    events.groupBy { it.time }.toSortedMap().forEach { (time, batch) ->
+        if (batch.any { it.type.substringBefore(' ') == "DREAMING_STARTED" ||
+            (it.packageName == "com.google.android.apps.tv.dreamx" && it.activity?.substringAfterLast('.') == "DreamActivity" &&
+                it.type.startsWith("ACTIVITY_RESUMED")) }) dreaming = true
+        val on = batch.any { it.type.substringBefore(' ') in setOf("SCREEN_INTERACTIVE", "SCREEN_ON") }
+        val screenOff = batch.any { it.type.substringBefore(' ') in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF") }
+        val dreamStopped = batch.any { it.type.substringBefore(' ') == "DREAMING_STOPPED" }
+        if (on) { dreaming = false; screenOn = true }
+        if (screenOff) screenOn = false
+        val dreamToOff = dreamStopped && !on && !screenOn
+        if (dreamStopped) dreaming = false
+        if (dreamToOff || batch.any { it.type.startsWith("DEVICE_SHUTDOWN") } ||
+            (!dreaming && batch.any { it.type.substringBefore(' ') in setOf("SCREEN_NON_INTERACTIVE", "SCREEN_OFF") })) offTimes += time
+    }
+    return offTimes
+}
+internal fun firstOnText(report: DayReport, zone: ZoneId) = report.firstOn?.let { clockText(it, zone) }
+    ?: if (report.onFromYesterday) "på fra i går" else "—"

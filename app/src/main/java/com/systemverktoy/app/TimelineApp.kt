@@ -88,21 +88,26 @@ internal fun rememberDayReport(batch: HistoryBatch?, day: java.time.LocalDate, t
 
 internal class TimelineNavigationState(
     detail: MutableState<Long?>, diagnostics: MutableState<Boolean>, focused: MutableState<Long?>,
-    val list: LazyListState,
+    val list: LazyListState, overview: MutableState<Boolean>,
 ) {
     var detail by detail
     var diagnostics by diagnostics
+    var overview by overview
+    var overviewDetail by mutableStateOf(false)
+    var overviewFocused by mutableStateOf<Long?>(null)
+    val overviewList = LazyListState()
     var focused by focused
     fun clear() { detail = null; diagnostics = false; focused = null }
 }
 
 @Composable
 internal fun rememberTimelineNavigation(day: java.time.LocalDate): TimelineNavigationState {
+    val overview = rememberSaveable { mutableStateOf(true) }
     val detail = rememberSaveable(day.toString()) { mutableStateOf<Long?>(null) }
     val diagnostics = rememberSaveable { mutableStateOf(false) }
     val focused = rememberSaveable(day.toString()) { mutableStateOf<Long?>(null) }
     val list = key(day) { rememberLazyListState() }
-    return remember(detail, diagnostics, focused, list) { TimelineNavigationState(detail, diagnostics, focused, list) }
+    return remember(detail, diagnostics, focused, list) { TimelineNavigationState(detail, diagnostics, focused, list, overview) }
 }
 
 @Composable
@@ -110,18 +115,22 @@ internal fun TimelineNavigation(day: java.time.LocalDate, today: java.time.Local
     report: DayReport?, appName: (String) -> String, onMove: (Long) -> Unit,
     state: TimelineNavigationState = rememberTimelineNavigation(day), diagnosticContent: @Composable () -> Unit,
 ) {
-    BackHandler(state.diagnostics || state.detail != null) {
-        if (state.diagnostics) state.diagnostics = false else state.detail = null
+    BackHandler(state.diagnostics || state.detail != null || !state.overview) {
+        if (state.diagnostics) state.diagnostics = false else if (state.detail != null) state.detail = null else state.overview = true
     }
-    val session = state.detail?.let { anchor -> report?.let { appSession(it.periods, anchor) } }.orEmpty()
+    val session = state.detail?.let { anchor -> report?.let { if (state.overviewDetail) viewingSessions(it.periods).firstOrNull { s -> s.start == anchor }?.periods.orEmpty() else appSession(it.periods, anchor) } }.orEmpty()
     LaunchedEffect(state.detail, report) {
         if (report != null && state.detail != null && session.isEmpty()) state.detail = null
     }
     when {
         state.diagnostics -> diagnosticContent()
         session.isNotEmpty() -> SessionScreen(session, sessionSignals(session, report!!.raw), zone, appName, firstListener = report.firstListener) { state.detail = null }
+        state.overview -> OverviewScreen(day, today, zone, report, appName, onMove,
+            onOpen = { state.overviewFocused = it.start; state.overviewDetail = true; state.detail = it.start },
+            onTimeline = { state.overview = false }, onDiagnostics = { state.diagnostics = true },
+            list = state.overviewList, focusedAnchor = state.overviewFocused, onFocus = { state.overviewFocused = it })
         else -> DayScreen(day, today, now, zone, report, appName, onMove,
-            onOpen = { state.focused = it.start; state.detail = it.start },
+            onOpen = { state.focused = it.start; state.overviewDetail = false; state.detail = it.start },
             onDiagnostics = { state.diagnostics = true }, list = state.list,
             focusedAnchor = state.focused, onRowFocus = { state.focused = it })
     }

@@ -94,8 +94,11 @@ internal object DataExport {
         val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
         val path = "${Environment.DIRECTORY_DOWNLOADS}/Systemverktoy/"
         val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ? AND ${MediaStore.MediaColumns.OWNER_PACKAGE_NAME} = ?"
-        val existing = resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), selection,
-            arrayOf(name, path, context.packageName), null)?.use { cursor ->
+        val existing = resolver.query(collection, arrayOf(MediaStore.MediaColumns._ID), android.os.Bundle().apply {
+            putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+            putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(name, path, context.packageName))
+            putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+        }, null)?.use { cursor ->
             if (cursor.moveToFirst()) ContentUris.withAppendedId(collection, cursor.getLong(0)) else null
         }
         val uri = existing ?: checkNotNull(resolver.insert(collection, ContentValues().apply {
@@ -105,6 +108,12 @@ internal object DataExport {
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         })) { "Could not create export" }
         try {
+            if (existing == null) {
+                val actual = resolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use {
+                    if (it.moveToFirst()) it.getString(0) else null
+                }
+                check(actual == name) { "Export filename changed" }
+            }
             checkNotNull(resolver.openOutputStream(uri, "wt")) { "Could not open export" }
                 .bufferedWriter(Charsets.UTF_8).use(content)
             resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)

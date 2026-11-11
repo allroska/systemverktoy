@@ -50,7 +50,7 @@ class TimelineScreenTest {
             RawEvent(time = time(15, 33), source = Source.MEDIA, type = "PLAYBACK_STATE_CHANGED", packageName = "Netflix", state = "STATE_PAUSED"))
         compose.setContent {
             SystemverktoyTheme {
-                TimelineNavigation(day, day, time(17, 52), zone, report.copy(raw = raw), { it }, {}) { }
+                TimelineNavigation(day, day, time(17, 52), zone, report.copy(raw = raw), { it }, {}, rememberTimelineNavigation(day).also { it.overview = false }) { }
             }
         }
         compose.onNodeWithTag("period-${rows.first().start}").assertIsFocused()
@@ -75,6 +75,7 @@ class TimelineScreenTest {
         lateinit var navigation: TimelineNavigationState
         compose.setContent { SystemverktoyTheme {
             val state = rememberTimelineNavigation(day)
+            LaunchedEffect(Unit) { state.overview = false }
             SideEffect { navigation = state }
             TimelineNavigation(day, day, time(17, 52), zone, report.copy(periods = many.asReversed()), { it }, {}, state) {
                 androidx.tv.material3.Text("Råloggtest")
@@ -104,6 +105,7 @@ class TimelineScreenTest {
         compose.setContent { SystemverktoyTheme {
             BackHandler { exits++ }
             val state = rememberTimelineNavigation(day)
+            LaunchedEffect(Unit) { state.overview = false }
             SideEffect { navigation = state }
             TimelineNavigation(day, day, time(17, 52), zone, data, { it }, {}, state) { }
         } }
@@ -112,6 +114,9 @@ class TimelineScreenTest {
         compose.runOnIdle { data = report.copy(periods = emptyList()) }
         compose.onNodeWithTag("day-heading").assertIsFocused()
         compose.runOnIdle { assertNull(navigation.detail) }
+        back()
+        compose.onNodeWithText("↓ Alle detaljer").assertExists()
+        compose.runOnIdle { assertEquals(0, exits) }
         back()
         compose.runOnIdle { assertEquals(1, exits) }
     }

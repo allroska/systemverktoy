@@ -56,3 +56,21 @@ mappe med dato og klokkeslett under Dokumenter/Systemverktoy-logg. `-Mappe` velg
 et annet mål. `-Installer` installerer nyeste APK først (krever GitHub CLI);
 åpne deretter appen på TV-en for å lage fersk eksport. Selve appen sender ingenting
 på nett og trenger ingen lagringstillatelse.
+
+## PIN-kode
+
+Ved første åpning velger du fire sifre og gjentar dem. Bruk tallknappene, eller
+opp/ned for å endre siffer fra 0 og venstre/høyre for å flytte. Urørte plasser
+vises som ○ og tastede som ●. Ved pilbruk vises sifferet under markøren til du
+flytter videre. OK bekrefter når alle fire plasser er fylt.
+PIN kreves igjen når appen har vært i bakgrunnen. Fem feil gir ett minutts pause;
+bakgrunnsloggingen fortsetter.
+
+Glemt PIN kan nullstilles fra en godkjent PC uten å slette historikken:
+
+```sh
+adb shell am broadcast -a com.systemverktoy.app.RESET_PIN -n com.systemverktoy.app/.PinResetReceiver
+```
+
+Åpne appen på nytt og velg ny kode. Ikke bruk `pm clear` eller avinstaller appen,
+siden det sletter historikken. PIN lagres som saltet hash og tas ikke med i eksport.
