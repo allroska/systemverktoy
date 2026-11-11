@@ -21,6 +21,8 @@ Forberedelse: slå av **autoforhåndsvisning** i Netflix-profilen som skal bruke
 | 13 | Historikk | Etter 14 dager | Hvor gammel er eldste hendelse i Androids logg (forventet ca. 10 dager)? Har appens egen database eldre data? |
 | 14 | Play Protect | Slå Play Protect på igjen etter installasjon og vent et døgn | Blir appen flagget, deaktivert eller fjernet? |
 | 15 | Hjerteslag | Se på diagnoseboksen etter noen timer med TV-en på | Siste hjerteslag er under ca. 15 min gammelt; ingen uforklarte hull |
+| 16 | Manglende tillatelser | Slå av én tillatelse om gangen i TV-innstillingene, åpne appen, og slå den på igjen via oppsettet | Ingen krasj; oppsett vises når en tillatelse mangler, diagnose vises igjen når begge er på |
+| 17 | Gjentatt kopiering | Åpne appen flere ganger etter vanlig app-bruk, og se på samme tidsrom i råloggen. Vent også på en bakgrunnskopiering | Hver `USAGE`-hendelse vises én gang. Nye `APP`- og andre sanntidshendelser er forventet |
 
 ## Resultat
 
@@ -43,3 +45,5 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | 13 | | |
 | 14 | | |
 | 15 | | |
+| 16 | | |
+| 17 | | |
