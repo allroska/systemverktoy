@@ -56,7 +56,7 @@ Bygges fra tre uavhengige signaler: **forgrunnsapp** (UsageEvents), **avspilling
 5. `APP_OPEN`: en app er i forgrunnen uten avspilling (pauset, stoppet, ingen sesjon).
 6. `UNKNOWN`: hull der appen vet at den ikke har data (f.eks. lytteren var frakoblet, eller logg mangler mellom to tidspunkt der TV-en var på).
 
-Kjent felle: Netflix melder «spiller» allerede på sin egen startside når autoforhåndsvisning er på. Eier slår av autoforhåndsvisning i Netflix-profilen som brukes på TV-en. Fase 1 skal i tillegg logge activity-klassenavn, slik at fase 2 kan kreve at Netflix sin avspiller-activity er i forgrunnen.
+Kjent felle: Netflix melder «spiller» allerede på sin egen startside når autoforhåndsvisning er på. Husstanden har flere Netflix-profiler, så autoforhåndsvisning **kan ikke** forutsettes avslått. Klassifiseringen må selv skille meny-forhåndsvisning fra ekte avspilling, f.eks. ved å kreve at Netflix sin avspiller-activity er i forgrunnen (activity-klassenavn logges i fase 1).
 
 Kjent felle: Økter må spores per activity (pakke + klasse), ikke per pakke. En sen `ACTIVITY_STOPPED` fra én activity i en app skal ikke avslutte en annen activity i samme app.
 

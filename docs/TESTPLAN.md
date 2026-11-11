@@ -2,7 +2,7 @@
 
 Mål: finne ut hva akkurat denne TV-en logger, slik at den ferdige appen bygges på fakta. La testappen stå installert i **minst 2 uker**. Ta bilde av diagnoseboksen og den rå loggen med mobilen etter hver test, og legg bildene i en ny issue eller PR-kommentar.
 
-Forberedelse: slå av **autoforhåndsvisning** i Netflix-profilen som skal brukes (netflix.com → Profiler → velg profil → Avspillingsinnstillinger).
+Forberedelse: ingen endring i Netflix-innstillinger (flere profiler i huset; appen må tåle forhåndsvisninger). YouTube er blokkert på denne TV-en – bruk en annen strømmeapp der testene nevner YouTube.
 
 | # | Test | Slik gjør du det | Hva vi ser etter i loggen |
 |---|---|---|---|
