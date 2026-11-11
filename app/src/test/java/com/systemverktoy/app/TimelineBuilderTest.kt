@@ -144,6 +144,14 @@ class TimelineBuilderTest {
         assertEquals(0L, duration(periods, Category.UNKNOWN))
     }
 
+    @Test fun `dream stopping without interactive signal leaves the screen off`() {
+        val periods = build(pulse(), resume(pkg = home), usage(10, "SCREEN_NON_INTERACTIVE (16)"),
+            event(10, Source.DREAM, "DREAMING_STARTED"), event(100, Source.DREAM, "DREAMING_STOPPED"))
+        assertEquals(listOf(Category.HOME, Category.IDLE), categories(periods))
+        assertEquals(base + 100_000, periods.last().endExclusive)
+        assertFalse(periods.last().ongoing)
+    }
+
     @Test fun `plain screen off is omitted and wake never reuses old playing state`() {
         val periods = build(pulse(), resume(), media(0, "STATE_PLAYING"),
             event(70, Source.APP, "SCREEN_OFF"), usage(100, "SCREEN_INTERACTIVE (15)"), end = 180)

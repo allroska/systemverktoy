@@ -127,7 +127,9 @@ class TimelineBuilder {
                     evidence["dream"] = event
                 }
                 type == "DREAMING_STOPPED" -> {
-                    screenOn(event.time)
+                    // Ending a dream does not prove the screen woke up. A real
+                    // wake has its own SCREEN_INTERACTIVE / SCREEN_ON signal.
+                    if (interactive == true) screenOn(event.time) else dreaming = false
                     evidence["dream"] = event
                 }
                 event.source == Source.LISTENER -> {
