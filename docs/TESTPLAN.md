@@ -23,6 +23,8 @@ Forberedelse: ingen endring i Netflix-innstillinger (flere profiler i huset; app
 | 15 | Hjerteslag | Se på diagnoseboksen etter noen timer med TV-en på | Siste hjerteslag er under ca. 15 min gammelt; ingen uforklarte hull |
 | 16 | Manglende tillatelser | Slå av én tillatelse om gangen i TV-innstillingene, åpne appen, og slå den på igjen via oppsettet | Ingen krasj; oppsett vises når en tillatelse mangler, diagnose vises igjen når begge er på |
 | 17 | Gjentatt kopiering | Åpne appen flere ganger etter vanlig app-bruk, og se på samme tidsrom i råloggen. Vent også på en bakgrunnskopiering | Hver `USAGE`-hendelse vises én gang. Nye `APP`- og andre sanntidshendelser er forventet |
+| 18 | Fotograferbar rålogg | Åpne en dag med minst 30 hendelser. Ta bilde i 720p og 1080p hvis tilgjengelig. Trykk ned til listen, deretter kanal ned og kanal opp. Bla ned og åpne appen på nytt; gjenta og vent på en ny hendelse | Minst 15 enlinjede rader, hvit tekst på mørk bakgrunn, ingen lyse bokser. Kanal blar én loggside; gjenåpning og nye hendelser flytter listen til toppen. Venstre/høyre bytter dag. Prøv også stor systemskrift: radhøyden skal vokse så bokstavene ikke kuttes |
+| 19 | Bare viktige | Trykk OK på «Bare viktige». Se på vanlig app-bruk, avspilling/pause, skjermsparer, skjerm av/på og lytterhendelser. Slå filteret av igjen | Launcherens og Systemverktøys egne app-hendelser som `APP_OPENED` skjules, men APP-hendelsene `BOOT_COMPLETED`, `IMPORT_FAILED`, `USAGE_ACCESS_REVOKED` og `heartbeat` beholdes når de finnes i loggen. Andre appers USAGE/MEDIA og globale DREAM/AUDIO/LISTENER/skjermhendelser vises. Alle råhendelser kommer tilbake når filteret slås av; ingen data slettes |
 
 ## Resultat
 
@@ -47,3 +49,5 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
 | 15 | | |
 | 16 | | |
 | 17 | | |
+| 18 | | |
+| 19 | | |
