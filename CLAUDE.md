@@ -4,6 +4,8 @@ I dette repoet skriver **Codex** koden. **Claude** er uavhengig kodereviewer. Ei
 
 Les `docs/SPEC.md` (hva som skal bygges og hvorfor), `AGENTS.md` (tekniske regler for Codex) og `docs/RESEARCH.md` (fakta om TV-en) før du reviewer.
 
+> **Kjører du lokalt i Claude Code på eierens PC (ikke som GitHub Action)?** Da gjelder ikke reviewer-rollen under. Les `docs/STATUS.md` først, og `CLAUDE.local.md` hvis den finnes.
+
 ## Hva du gjør
 
 - Du **reviewer**. Du skriver ikke ny funksjonalitet og pusher ikke kode, med mindre eieren eksplisitt ber om det i en `@claude`-kommentar.
