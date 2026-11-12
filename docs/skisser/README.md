@@ -6,6 +6,7 @@ Referanseskisser for skjermene. Filene er HTML-maler fra et designverktøy: layo
 |---|---|---|
 | `Oversikt.png` / `Oversikt.html` | Oversikt – startskjerm med TV-titting per økt | 5.0 |
 | `Kompakt.png` / `Kompakt.html` | Detaljert tidslinje (kompakt) | 5.1 |
+| `Ukesoversikt.png` / `Ukesoversikt.html` | Ukesoversikt – mandag–søndag, døgnkart og apper | 5.7 |
 | `Main.dc.html` | Gammel hovedskjerm – bare farger og kategorinavn gjelder | – |
 | `Detalj.dc.html` | Detaljer for én app-økt, med «Grunnlag – rå signaler» | 5.2 |
 | `Igaar.dc.html` | Tidligere dag, med varsel om hull i loggen | 5.3 |

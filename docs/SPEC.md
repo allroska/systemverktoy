@@ -73,7 +73,7 @@ Referanseskisser ligger i `docs/skisser/` (HTML). De viser layout, tekster og fa
 
 ### 5.0 Oversikt (startskjerm) – `docs/skisser/Oversikt.png` (kilde: `Oversikt.html`)
 Eier 11.11: rask oversikt over det som teller som TV-titting. Første skjerm etter PIN.
-- **Topplinje** (11 sp, dempet): «I dag · torsdag 12. november» til venstre, «← / → dag · OK økt · ↓ detaljer» til høyre.
+- **Topplinje** (11 sp, dempet): «I dag · torsdag 12. november» til venstre, «← / → dag · OK økt · ↑ uke · ↓ detaljer» til høyre.
 - **Stort tall:** «TV-titting i dag **2 t 9 min**» (tallet ca. 44 sp, blått `#4E95F0`), og ved siden av i dempet tekst: «4 økter · første påslag 14:02».
 - **Én rad per økt**, eldste øverst, ca. 40 dp høy, 15 sp: tidsrom (start–slutt for hele økten), blå prikk, appnavn, en tynn strek og **minutter sett** til høyre (bare minutter med avspilling, ikke tid i meny/pause). Pågående økt viser «–nå».
 - **Streken teller opp mot dagens total**, i én farge (`#4E95F0` på mørk bakgrunn): hele bredden = dagens «TV-titting». Første økt fyller sin andel. Neste økt fyller fra 0 til summen så langt, og så videre. Siste økt er alltid full.
@@ -81,7 +81,7 @@ Eier 11.11: rask oversikt over det som teller som TV-titting. Første skjerm ett
 - **Bunnlinje:** «HDMI / TV-kanaler 1 t 20 min · Sto bare på 12 min» til venstre, «↓ Alle detaljer» til høyre.
 - Ingen titting: «Ingen TV-titting i dag.» (resten av skjermen som vanlig).
 - Ufullstendig dag eller dag før appen fulgte med: samme dempede linje som på detaljskjermen (5.1). Økter uten avspillingsdata vises grå med «avspilling ukjent» i stedet for minutter, og teller ikke.
-- OK på en økt → detaljer (5.2) for hele økten. ↓ fra siste rad (eller fra bunnlinjen) → den detaljerte tidslinjen (5.1). Venstre/høyre bytter dag her også.
+- OK på en økt → detaljer (5.2) for hele økten. ↓ fra siste rad (eller fra bunnlinjen) → den detaljerte tidslinjen (5.1). ↑ fra første rad (eller når dagen er tom) → Ukesoversikt (5.7) for uka dagen hører til. Venstre/høyre bytter dag her også.
 
 ### 5.1 Detaljert tidslinje (tidligere «hovedskjerm») – `docs/skisser/Kompakt.png` (kilde: `Kompakt.html`)
 Kompakt layout (eier 11.11): tidslinjen skal ta mesteparten av skjermen. Målt i 960×540 dp:
@@ -124,6 +124,27 @@ Eier 11.11: appen skal kreve en firesifret PIN hver gang den åpnes.
 - Glemt PIN: kan nullstilles fra PC-en med adb, f.eks. `adb shell am broadcast -a com.systemverktoy.app.RESET_PIN -n com.systemverktoy.app/.PinResetReceiver`. Mottakeren skal være beskyttet slik at bare adb/shell kan sende den (f.eks. `android:permission="android.permission.DUMP"`), ikke andre apper. Aldri `pm clear` (sletter historikken).
 - PIN lagres bare som hash (f.eks. PBKDF2 med salt), aldri i klartekst, og aldri i eksportfilene.
 
+### 5.7 Ukesoversikt – `docs/skisser/Ukesoversikt.png` (kilde: `Ukesoversikt.html`)
+Eier 13.11: se hele uka på én skjerm – hvor mye, når på døgnet, og i hvilke apper. Målt i 960×540 dp (skissen):
+- **Uke = mandag 00:00 til søndag 24:00** lokal tid, alltid mandag–søndag (ikke «siste 7 dager»). Ukenummer etter ISO 8601 (norsk standard).
+- **Topplinje** (11 sp, dempet): «**Uke 46** · mandag 9. – søndag 15. november» til venstre, «↑ / ↓ dag · OK åpne dagen · ← / → uke» til høyre.
+- **Toppfelt, venstre halvdel** – snitt per dag, ingen streker:
+  - «TV-titting, snitt per dag» (13 sp, dempet).
+  - «Uke 46 **1 t 7 min**» (15 sp, tallet fet og blått) og under «Forrige uke **1 t 24 min**» (15 sp, dempet).
+  - «17 min mindre per dag enn forrige uke · totalt 5 t 36 min så langt» (12 sp, dempet). «mer» når det er mer, «Samme som forrige uke» når det er likt. For en uke som er ferdig: «totalt …» uten «så langt».
+  - Snitt = ukens «TV-titting» delt på antall dager i uka som har startet (i dag teller med). Forrige uke deles på 7. Dager før appen fulgte med telles ikke med, verken i sum eller i antall dager. Mangler forrige uke helt: vis «Forrige uke –» og ingen sammenligningslinje.
+- **Toppfelt, høyre halvdel** – «Andel av TV-tittingen denne uka» (11 sp, dempet), og under én linje per app, sortert med mest først: blå prikk, appnavn, prosent (dempet) og tid (fet), 14 sp, ca. 22 dp høye linjer. Ingen streker.
+  - **Maks 4 linjer.** 1–4 apper: alle vises. 5 apper eller flere: de 3 største, og fjerde linje er «Andre (N apper) ›» med grå prikk (`#7D8893`) og summen av resten.
+  - Under listen: lilla firkant + «HDMI / TV-kanaler 7 t 50 min» (12 sp, dempet). «Sto bare på» vises ikke på denne skjermen.
+- **Døgnkart:** én rad per dag (mandag øverst), 24 ruter per rad (én per klokketime 00–23), ukedag og dato til venstre (15 sp, fet), minutter sett til høyre (15 sp, fet). Timetall 00, 01 … 23 over hver kolonne (11 sp), «sett på» over summene.
+  - Rutefarge: **blå** `#4E95F0` hvis timen har minst 1 min `WATCHING`, ellers **lilla** `#9B8AF0` hvis minst 1 min `HDMI`, ellers **oransje skravert** `#E8875F` hvis minst 1 min `UNKNOWN`, ellers tom (`#182028`). Én blåfarge – ingen egen farge for «mye» eller «lite».
+  - Timer som ikke har kommet ennå (resten av i dag, og dager senere i uka): bare tynn ramme (`#26303A`), og dagens sum vises som «–» i dempet farge.
+  - Sommertid: kolonnene er klokketimer. Når klokka stilles tilbake, havner begge 02-timene i samme rute. Når klokka stilles fram, er 02-ruta tom.
+  - I dag har hvit fokusramme når skjermen åpnes.
+- **Bunnlinje** (12 sp, dempet): fargeforklaring «Sett på · HDMI / TV-kanaler · Ukjent – mangler logg · Ikke kommet ennå» til venstre, «Hver rute = én time» til høyre.
+- **Tallene skal stemme med Oversikt:** dagens sum i døgnkartet er nøyaktig samme tall som Oversikt viser for den dagen. Ukens total er summen av dagssummene. Appenes minutter fordeles slik at de summerer til ukens total (avrund fra sekunder, og fordel rest-minuttene til de største restene).
+- **Fjernkontroll:** ↑ / ↓ flytter mellom dagene. OK på en dag → Oversikt for den dagen. ← / → forrige/neste uke (ikke lenger enn denne uka, og ikke lenger tilbake enn appen har data). Finnes linjen «Andre», flytter ↑ fra mandag fokus dit, og OK der viser en enkel liste med alle ukens apper (appnavn, prosent, tid); Tilbake lukker listen. Tilbake fra Ukesoversikt → Oversikt.
+
 ### Navigasjon med fjernkontroll
 | Tast | Handling |
 |---|---|
@@ -131,7 +152,9 @@ Eier 11.11: appen skal kreve en firesifret PIN hver gang den åpnes.
 | Opp / ned | Flytt fokus i tidslinjen |
 | OK | Åpne detaljer for raden/økten |
 | Ned fra siste rad i Oversikt | Detaljert tidslinje |
-| Tilbake | Detaljer → forrige skjerm. Detaljert tidslinje → Oversikt. Oversikt → lukk appen |
+| Opp fra første rad i Oversikt | Ukesoversikt |
+| Venstre / høyre i Ukesoversikt | Forrige / neste uke (ikke lenger enn denne uka) |
+| Tilbake | Detaljer → forrige skjerm. Detaljert tidslinje → Oversikt. Ukesoversikt → Oversikt. Oversikt → lukk appen |
 
 Fokusert rad har tydelig hvit ramme. Alt skal kunne brukes uten berøring.
 

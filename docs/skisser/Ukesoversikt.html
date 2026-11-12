@@ -1,0 +1,73 @@
+<!doctype html><title>Ukesoversikt</title><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}
+body{width:960px;height:540px;background:#0F1317;color:#EEF1F4;font-family:Inter,"DejaVu Sans",sans-serif;padding:18px 32px;overflow:hidden;position:relative}
+.dim{color:#A3ADB8}
+.top{display:flex;justify-content:space-between;font-size:11px;color:#A3ADB8}
+.top b{color:#EEF1F4}
+.head{margin-top:12px;height:131px;display:grid;grid-template-columns:1fr 1fr;column-gap:48px;align-items:center}
+.cmp{display:grid;grid-template-columns:100px 120px;align-items:center;font-size:15px;margin-top:7px}
+.cmp b{font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:150px 45px 90px;align-items:center;height:22px;font-size:14px}
+.app .n{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.app .p{text-align:right;color:#A3ADB8;font-variant-numeric:tabular-nums}
+.app .t{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.sq{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.grid{display:grid;grid-template-columns:90px repeat(24,minmax(0,1fr)) 100px;column-gap:2px;align-items:center;padding:0 10px;border:2px solid transparent}
+.axis{margin-top:10px;font-size:11px;color:#A3ADB8}
+.axis span{text-align:center;font-variant-numeric:tabular-nums}
+.axis span:last-child{text-align:right}
+.day{height:38px;border-radius:8px;margin-top:4px}
+.day.f{border-color:#fff;background:#212B35}
+.day .l{font-size:15px;font-weight:700}
+.day .s{font-size:15px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.day.fut .l,.day.fut .s{color:#7D8893}
+.c{height:26px;border-radius:3px;background:#182028}
+.c.b{background:#4E95F0}.c.h{background:#9B8AF0}
+.c.u{background:repeating-linear-gradient(45deg,#E8875F 0 3px,#6B3B28 3px 6px)}
+.c.x{background:none;border:1px solid #26303A}
+.foot{position:absolute;left:32px;right:32px;bottom:20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#A3ADB8}
+.foot .k{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 5px 0 12px;vertical-align:-1px}
+.foot .k:first-child{margin-left:0}
+.tag{position:absolute;right:12px;bottom:5px;font-size:9px;color:#56616C}
+</style><script>
+// Oppdiktede eksempeldata. Uke 46, i dag fredag 13. november kl. 21.
+// Koder per time: b = sett på, h = HDMI/TV-kanaler, u = ukjent (mangler logg), . = ingenting, x = ikke kommet ennå.
+const NOW_DAY=4, NOW_HOUR=21;
+const D=[
+ ['man 9.',45,{17:'h',18:'h',19:'b',20:'b',21:'h'}],
+ ['tir 10.',65,{18:'b',19:'u',20:'b',21:'h',22:'b'}],
+ ['ons 11.',7,{16:'h',17:'h',18:'h',19:'b',20:'h',21:'h'}],
+ ['tor 12.',129,{14:'b',15:'b',16:'b',17:'h',18:'h',19:'b',20:'b'}],
+ ['fre 13.',90,{18:'b',19:'b',20:'b',21:'b'}],
+ ['lør 14.',0,{}],
+ ['søn 15.',0,{}]];
+// Maks 4 linjer: 1–4 apper vises alle; 5 eller flere gir de 3 største + «Andre (N apper) ›».
+const APPS=[['Netflix',174],['NRK TV',144],['Disney+',18]];
+const WEEK=336, DAYS_SO_FAR=5, PREV_WEEK=590;
+const hm=m=>m<60?`${m} min`:(m%60?`${Math.floor(m/60)} t ${m%60} min`:`${Math.floor(m/60)} t`);
+function apps(el){let A=APPS.slice();if(A.length>4){const r=A.slice(3);A=A.slice(0,3).concat([[`Andre (${r.length} apper) ›`,r.reduce((s,a)=>s+a[1],0),1]])}
+ A.forEach(a=>{const d=document.createElement('div');d.className='app';d.innerHTML=`<span class="n"><span class="dot" style="background:${a[2]?'#7D8893':'#4E95F0'}"></span>${a[0]}</span><span class="p">${Math.round(a[1]/WEEK*100)} %</span><span class="t">${hm(a[1])}</span>`;el.appendChild(d)})}
+function axis(el){let h='<span></span>';for(let i=0;i<24;i++)h+=`<span>${String(i).padStart(2,'0')}</span>`;el.innerHTML=h+'<span>sett på</span>'}
+function days(el){D.forEach((d,i)=>{const fut=i>NOW_DAY;const r=document.createElement('div');r.className='grid day'+(i==NOW_DAY?' f':'')+(fut?' fut':'');let h=`<span class="l">${d[0]}</span>`;
+ for(let t=0;t<24;t++){const c=(fut||(i==NOW_DAY&&t>NOW_HOUR))?'x':(d[2][t]||'.');h+=`<span class="c ${c=='.'?'':c}"></span>`}
+ r.innerHTML=h+`<span class="s">${fut?'–':hm(d[1])}</span>`;el.appendChild(r)})}
+</script><body>
+<div class="top"><div><b>Uke 46</b> · mandag 9. – søndag 15. november</div><div>↑ / ↓ dag · OK åpne dagen · ← / → uke</div></div>
+<div class="head">
+ <div>
+  <div class="dim" style="font-size:13px">TV-titting, snitt per dag</div>
+  <div class="cmp"><span>Uke 46</span><b style="color:#4E95F0">1 t 7 min</b></div>
+  <div class="cmp dim"><span>Forrige uke</span><b>1 t 24 min</b></div>
+  <div class="dim" style="font-size:12px;margin-top:7px">17 min mindre per dag enn forrige uke · totalt 5 t 36 min så langt</div>
+ </div>
+ <div>
+  <div class="dim" style="font-size:11px;margin-bottom:4px">Andel av TV-tittingen denne uka</div>
+  <div id="apps"></div>
+  <div class="dim" style="font-size:12px;margin-top:4px"><span class="sq" style="background:#9B8AF0"></span>HDMI / TV-kanaler 7 t 50 min</div>
+ </div>
+</div>
+<div class="grid axis" id="axis"></div>
+<div id="days"></div>
+<div class="foot"><span><span class="k" style="background:#4E95F0"></span>Sett på<span class="k" style="background:#9B8AF0"></span>HDMI / TV-kanaler<span class="k" style="background:repeating-linear-gradient(45deg,#E8875F 0 3px,#6B3B28 3px 6px)"></span>Ukjent – mangler logg<span class="k" style="border:1px solid #3A4652"></span>Ikke kommet ennå</span><span>Hver rute = én time</span></div>
+<div class="tag">Ukesoversikt · oppdiktede eksempeldata</div>
+<script>apps(document.getElementById('apps'));axis(document.getElementById('axis'));days(document.getElementById('days'))</script></body>

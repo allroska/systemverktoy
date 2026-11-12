@@ -99,6 +99,13 @@ Oppsummert fra research gjort før prosjektstart (november 2026). Status:
 - Netflix og NRK TV har én activity hver i bruk (`com.netflix.ninja.MainActivity`, `no.nrk.tv.androidtv.MainActivityTv`, i tillegg til splash). Activity-navnet skiller ikke meny fra avspilling.
 - Hendelsestyper siste 24 t: STANDBY_BUCKET_CHANGED (925), ACTIVITY_RESUMED/PAUSED/STOPPED (~180 hver), SLICE_PINNED, NOTIFICATION_INTERRUPTION, FOREGROUND_SERVICE_START/STOP, SCREEN_* (5+5), CONFIGURATION_CHANGE, DEVICE_SHUTDOWN/STARTUP, USER_UNLOCKED. Ingen KEYGUARD-hendelser.
 
+### Eksport 12.11 (v1.0.15)
+| Fakta | Status |
+|---|---|
+| **Oversikt-tallet stemmer med rådata:** samme antall minutter Netflix i eksporten som på TV-en (eier 13.11). | Bekreftet |
+| **Spotify kan spille med skjermen av** (trolig Spotify Connect fra mobil): MediaSession `STATE_PLAYING` med tittel i to perioder mens skjermen var av (`SCREEN_NON_INTERACTIVE`, ingen forgrunnsapp). Vises ikke i tidslinjen i dag. Om «lyd uten bilde» skal vises, er et åpent produktvalg. | Bekreftet |
+| **Den automatiske omstarten kom midt på dagen**, ikke ca. 04:48 som 11.11 (`DEVICE_SHUTDOWN`/`DEVICE_STARTUP` samtidig med `SCREEN_INTERACTIVE`). Tidspunktet er altså ikke fast. | Bekreftet |
+
 ## Kilder (utvalg)
 - AOSP `UsageStatsDatabase.java` – lagringstid
 - developer.android.com: `UsageStatsManager`, `UsageEvents.Event`, `NotificationListenerService`, `MediaSessionManager`, `AudioManager`

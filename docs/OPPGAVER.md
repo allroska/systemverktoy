@@ -133,11 +133,34 @@ Hvis PR-en blir over ca. 800 linjer: lag gjerne to PR-er (først punkt 3–5, s�
 
 ---
 
+## Oppgave 6 – Ukesoversikt og to små rettelser
+
+Nivå **Middels**. Produktvalg 13.11: ukesoversikt (variant C4 fra skisserunden), alltid mandag–søndag.
+
+```
+Les AGENTS.md og docs/SPEC.md (særlig 5.0 og 5.7). Gjør dette:
+
+1. Ny skjerm «Ukesoversikt» etter SPEC 5.7 og skissen docs/skisser/Ukesoversikt.png (kilde Ukesoversikt.html):
+   - Uke = mandag 00:00 til søndag 24:00 lokal tid (systemets tidssone), ISO-ukenummer. Bruk java.time, ingen hardkodet UTC-offset.
+   - Toppfelt venstre: snitt per dag denne uka og forrige uke (bare tall, ingen streker), og linjen «N min mindre/mer per dag enn forrige uke · totalt X så langt». Snitt = ukens TV-titting / antall dager i uka som har startet (i dag teller med); forrige uke / 7. Dager før appen fulgte med telles ikke. Mangler forrige uke: «Forrige uke –» og ingen sammenligningslinje.
+   - Toppfelt høyre: «Andel av TV-tittingen denne uka», én linje per app (blå prikk, navn, prosent, tid), mest først, ingen streker. Maks 4 linjer: 5 apper eller flere → de 3 største + «Andre (N apper) ›» (grå prikk) med summen av resten. Under: «HDMI / TV-kanaler <sum>». Ikke «Sto bare på».
+   - Døgnkart: 7 rader (man–søn) × 24 ruter (klokketimer 00–23), timetall over hver kolonne, dagens sum til høyre. Rutefarge: blå hvis ≥ 1 min WATCHING i timen, ellers lilla hvis ≥ 1 min HDMI, ellers oransje skravert hvis ≥ 1 min UNKNOWN, ellers tom. Timer/dager som ikke har kommet ennå: bare tynn ramme, sum «–». Sommertid: se SPEC 5.7.
+   - Tallene skal stemme med Oversikt: dagssummen er nøyaktig samme tall som Oversikt viser for dagen, ukens total = summen av dagssummene, og appenes minutter fordeles slik at de summerer til ukens total.
+   - Fjernkontroll: ↑ fra første rad i Oversikt (eller tom dag) åpner Ukesoversikt for uka dagen hører til. ↑ / ↓ flytter mellom dagene, OK → Oversikt for den dagen, ← / → forrige/neste uke (ikke etter denne uka, ikke før første data). Finnes «Andre»: ↑ fra mandag flytter fokus dit, OK viser enkel liste med alle ukens apper (navn, prosent, tid). Tilbake: liste → Ukesoversikt → Oversikt. Hvit fokusramme, alt med D-pad. Oppdater hint-teksten i Oversikts topplinje («↑ uke»).
+   - Beregningen som ren Kotlin (f.eks. WeekSummaryBuilder) som bygger på den samme dagsberegningen som Oversikt bruker. Tester: ukegrense søndag→mandag ved midnatt, uke med sommertid (både mars og oktober), snitt midt i uka, dager før appen fulgte med, «Andre»-regelen (4 apper = 4 linjer, 5 apper = 3 + Andre), rutefarge-prioritet, avrunding som summerer riktig, tom uke.
+2. Avrunding i Oversikt (review PR #7, «Kan vente» 2): radene summerer seg ikke alltid til totalen fordi hver rad rundes ned for seg. Regn fra sekunder: totalen = avrundet sum, og fordel minuttene på radene slik at de summerer nøyaktig til totalen (største rest først). Bruk samme hjelpefunksjon i Ukesoversikt. Test for dette.
+3. PIN-skjermen (review PR #7, «Kan vente» 1, PinGate.kt ca. linje 95–98): tøm meldingen («Tast alle fire sifrene.», «Feil PIN-kode.») når et nytt siffer tastes og når koden godtas.
+
+Ingen nye tillatelser, ingen INTERNET, ingen endring i applicationId eller signering. Hvis PR-en blir over ca. 800 linjer: lag gjerne to PR-er (først punkt 2–3, så 1).
+```
+
+---
+
 ## Senere (bestemt, ikke startet)
 
 - **Sjekke hjemmefra:** produktvalg ikke tatt ennå. Appen skal fortsatt ikke ha `INTERNET`.
 - **Skjermsparer med bilder og Ruter-avganger:** egen app, ikke en del av Systemverktøy. Tas en annen gang.
-- **Ukesoversikt** (skisse B): kan komme etter Oversikt.
+- **Lyd uten bilde** (f.eks. Spotify Connect med skjermen av, sett 12.11): produktvalg ikke tatt ennå.
 
 ---
 

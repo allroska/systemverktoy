@@ -2,7 +2,7 @@
 
 Denne filen er for Claude når eieren jobber med prosjektet lokalt i **Claude Code** (på egen PC), ikke for GitHub-reviewen. Den oppsummerer hvor prosjektet står, hvordan vi jobber, og hva som gjenstår. Oppdater den når noe viktig endres.
 
-Sist oppdatert: 12.11.2026.
+Sist oppdatert: 13.11.2026.
 
 ## Din rolle lokalt
 
@@ -22,9 +22,9 @@ Privat, helt lokal Android TV-app («Systemverktøy») for en Sony BRAVIA med Go
 |---|---|
 | Installert versjon | 1.0.15 (Release fra PR #7, merget 11.11) |
 | Ferdig | Logging i bakgrunnen, klassifisering v2 (SPEC kap. 4), kompakt detaljert tidslinje (5.1), **Oversikt** som startskjerm (5.0), **PIN** (5.6), fileksport til PC (Oppgave 4), riktig «Første påslag» etter omstart/over midnatt |
-| Bekreftet på TV | Netflix og NRK TV melder avspilling via MediaSession. Skjermsparer, HDMI 4 (Sony TV-appen), nattlig omstart ca. 04:48. Se `docs/RESEARCH.md` |
-| Ikke testet ennå | Avspilling i TV 2 Play, Prime, Viaplay, Disney+. Oversikt og PIN på selve TV-en (`docs/TESTPLAN.md`) |
-| Neste naturlige steg | Hente dagens eksport og sjekke at Oversikt-tallene stemmer med rådata. Deretter punktene under «Senere» og «Kan vente» |
+| Bekreftet på TV | Netflix og NRK TV melder avspilling via MediaSession. Skjermsparer, HDMI 4 (Sony TV-appen), automatisk omstart (tidspunktet varierer). Oversikt-tallet for 12.11 stemmer med rådata. Se `docs/RESEARCH.md` |
+| Ikke testet ennå | Avspilling i TV 2 Play, Prime, Viaplay, Disney+. PIN på selve TV-en (`docs/TESTPLAN.md`) |
+| Neste naturlige steg | **Oppgave 6** i `docs/OPPGAVER.md`: Ukesoversikt (SPEC 5.7, skisse `docs/skisser/Ukesoversikt.png`) + to små rettelser. Klar til å limes inn i Codex |
 
 ## Arbeidsflyt (én oppgave = én PR)
 
@@ -38,7 +38,7 @@ Kjente feller:
 - Codex kan jobbe i en utdatert kopi. Hvis den ikke finner nye filer: be den kjøre `git checkout main && git pull origin main`.
 - Interaktive `gh`-menyer med piltaster virker ikke i eierens terminal. Bruk eksplisitte kommandoer.
 - Windows PowerShell 5.1: kommandoer på én linje. `>>` betyr at den venter på mer input (Ctrl+C).
-- `release.yml` ignorerer endringer i `docs/**/*.md`, men andre filer (også bilder i `docs/`) utløser ny versjon.
+- `release.yml` ignorerer endringer i `docs/**` (også bilder og HTML-skisser) og i alle `*.md`-filer. Andre filer utløser ny versjon.
 
 ## Kommandoer eieren bruker (PowerShell)
 
@@ -64,11 +64,12 @@ powershell -ExecutionPolicy Bypass -File $HOME\Systemverktoy\hent-tvlogg.ps1 -Tv
 - Tekst minst 13 sp (65" 4K), hjelpetekst 11 sp.
 - «Første påslag» = første gang TV-en slås på etter å ha vært av; omstart om natten teller ikke.
 - PIN: fire sifre, tall- eller piltaster, låses når appen går i bakgrunnen.
+- Ukesoversikt (13.11, variant C4 fra skisserunden): alltid mandag–søndag, ikke siste 7 dager. Toppfelt med snitt per dag mot forrige uke, uten streker. Apper med prosent og tid, uten streker, maks 4 linjer (5+ apper → 3 største + «Andre (N apper) ›»). Døgnkart med én blåfarge og alle timetall 00–23. «Sto bare på» vises ikke der.
 - Data ut av TV-en: aldri fra appen. Sjekk hjemmefra: ikke bestemt (anbefalt: PC hjemme laster opp til eierens egen Google Drive; appen forblir uten internett). App som sender selv (INTERNET) er frarådet (Play Protect kan stemple den som overvåkingsapp).
 
 ## Backlog
 
-Se «Senere» i `docs/OPPGAVER.md`, og «Kan vente» i Claude-reviewene på PR #6 og #7 (f.eks. gammel melding på PIN-skjermen, grå «avspilling ukjent»-økter for systemapper, `DREAMING_STOPPED`-rekkefølge, PIN-sperre ved klokkejustering). Ideer: ukesoversikt (skisse B i chatten, ikke i repoet), strammere støyfilter, test av flere strømmeapper, branch protection på `main`.
+Se «Senere» i `docs/OPPGAVER.md`, og «Kan vente» i Claude-reviewene på PR #6 og #7 (f.eks. gammel melding på PIN-skjermen, grå «avspilling ukjent»-økter for systemapper, `DREAMING_STOPPED`-rekkefølge, PIN-sperre ved klokkejustering). Ideer: strammere støyfilter, test av flere strømmeapper, branch protection på `main`. Åpent produktvalg: skal lyd uten bilde (f.eks. Spotify Connect med skjermen av, sett 12.11) vises, og i så fall hvordan?
 
 ## Hemmeligheter (ikke i repoet)
 
