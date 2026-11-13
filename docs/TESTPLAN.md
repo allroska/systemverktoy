@@ -121,3 +121,21 @@ Fyll inn når testene er gjort (eller gi bildene til Codex og be den fylle inn):
    neste vanlige påslag vises. Uten avslag hele dagen står «på fra i går».
 6. Eksporter gjentatte ganger. Filnavn skal være uendrede, uten nummererte kopier.
    PowerShell 5.1 skal vise æøå riktig i henteskriptet.
+
+## Oppgave 6 – Ukesoversikt
+
+1. Etter PIN: trykk opp fra første økt i Oversikt (og prøv en tom dag). Ukesoversikt
+   åpnes for riktig mandag–søndag, med i dag i hvit fokusramme. Alle sju rader og
+   24 timer skal synes på både 720p og 1080p.
+2. Opp/ned velger dag, OK åpner Oversikt for dagen. Tilbake fra ukesoversikten
+   går til dagen du kom fra. Fremtidige dager vises med «–» og kan ikke åpnes.
+   Venstre/høyre bytter uke, begrenset av første lagrede data og inneværende uke.
+3. Sammenlign dagssummene med Oversikt og summer dem til ukens total. Øktradene
+   i Oversikt og appenes minutter i uka skal summere nøyaktig til sine totaler.
+   Snitt utelater dager før første hjerteslag/lyttertilkobling; manglende forrige
+   uke vises som «–», uten sammenligning.
+4. Kontroller blå avspilling, lilla HDMI og oransje skravert hull i døgnkartet.
+   Fremtidige timer har bare ramme. Med minst fem apper: opp fra mandag til
+   «Andre», OK viser alle appene, Tilbake lukker listen og gjenoppretter fokus.
+5. PIN: bekreft tre sifre, tast neste siffer og se at feilmeldingen forsvinner.
+   Gjenta etter feil kode, både med tallknapper og piltaster.

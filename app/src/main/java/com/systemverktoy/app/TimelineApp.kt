@@ -24,6 +24,7 @@ internal fun TimelineApp() {
     var access by remember { mutableStateOf(Access.read(context)) }
     var zone by remember { mutableStateOf(ZoneId.systemDefault()) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var weekly by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     val day = selectedDay(selected, today)
@@ -39,7 +40,7 @@ internal fun TimelineApp() {
         }
     }
     LaunchedEffect(access.ready) {
-        if (!access.ready) { selected = null; navigation.clear() }
+        if (!access.ready) { weekly = false; selected = null; navigation.clear() }
     }
     if (!access.ready) { SetupScreen(access); return }
     val window = remember(day, zone) { historyWindow(day, zone) }
@@ -60,8 +61,14 @@ internal fun TimelineApp() {
                 else -> pkg
             } }
     } }
+    if (weekly) {
+        WeekRoute(day, today, now, zone, appName, onOpen = {
+            selected = it.takeUnless { date -> date == today }?.toString(); weekly = false
+        }, onClose = { weekly = false })
+        return
+    }
     TimelineNavigation(day, today, now, zone, report, appName,
-        onMove = { selected = shiftedDay(selected, today, it) }, state = navigation) {
+        onMove = { selected = shiftedDay(selected, today, it) }, state = navigation, onWeek = { weekly = true }) {
         RawLog(access, today, zone, day)
     }
 }
@@ -113,7 +120,7 @@ internal fun rememberTimelineNavigation(day: java.time.LocalDate): TimelineNavig
 @Composable
 internal fun TimelineNavigation(day: java.time.LocalDate, today: java.time.LocalDate, now: Long, zone: ZoneId,
     report: DayReport?, appName: (String) -> String, onMove: (Long) -> Unit,
-    state: TimelineNavigationState = rememberTimelineNavigation(day), diagnosticContent: @Composable () -> Unit,
+    state: TimelineNavigationState = rememberTimelineNavigation(day), onWeek: () -> Unit = {}, diagnosticContent: @Composable () -> Unit,
 ) {
     BackHandler(state.diagnostics || state.detail != null || !state.overview) {
         if (state.diagnostics) state.diagnostics = false else if (state.detail != null) state.detail = null else state.overview = true
@@ -127,7 +134,7 @@ internal fun TimelineNavigation(day: java.time.LocalDate, today: java.time.Local
         session.isNotEmpty() -> SessionScreen(session, sessionSignals(session, report!!.raw), zone, appName, firstListener = report.firstListener) { state.detail = null }
         state.overview -> OverviewScreen(day, today, zone, report, appName, onMove,
             onOpen = { state.overviewFocused = it.start; state.overviewDetail = true; state.detail = it.start },
-            onTimeline = { state.overview = false }, onDiagnostics = { state.diagnostics = true },
+            onTimeline = { state.overview = false }, onWeek = onWeek, onDiagnostics = { state.diagnostics = true },
             list = state.overviewList, focusedAnchor = state.overviewFocused, onFocus = { state.overviewFocused = it })
         else -> DayScreen(day, today, now, zone, report, appName, onMove,
             onOpen = { state.focused = it.start; state.overviewDetail = false; state.detail = it.start },

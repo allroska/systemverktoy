@@ -39,8 +39,8 @@ Appen overskriver tre filer i `Download/Systemverktoy/` når den åpnes og omtre
 - `systemverktoy-diagnose.txt`: diagnosestatus, appversjon og eksporttidspunkt.
 
 CSV-filene er UTF-8 med komma som skilletegn og ISO-tid med lokal tidssoneoffset.
-Eksporten endrer eller sletter ingen historikk i appen. I skjult diagnosevisning
-(opp til overskriften, hold OK i tre sekunder) kan du velge **Eksporter nå**.
+Eksporten endrer eller sletter ingen historikk i appen. I den detaljerte tidslinjen
+kan du åpne skjult diagnosevisning (opp til overskriften, hold OK i tre sekunder) kan du velge **Eksporter nå**.
 Vent på «Eksportert hh:mm» før du henter filene.
 
 På PC: installer Android Platform Tools (`winget install Google.PlatformTools`),
@@ -74,3 +74,11 @@ adb shell am broadcast -a com.systemverktoy.app.RESET_PIN -n com.systemverktoy.a
 
 Åpne appen på nytt og velg ny kode. Ikke bruk `pm clear` eller avinstaller appen,
 siden det sletter historikken. PIN lagres som saltet hash og tas ikke med i eksport.
+
+## Ukesoversikt
+
+Trykk opp fra første økt i Oversikt (eller fra en tom dag) for mandag–søndag med
+snitt, appfordeling og et døgnkart. Venstre/høyre bytter uke, opp/ned velger dag,
+OK åpner dagens Oversikt. Ved minst fem apper åpnes hele applisten via «Andre»
+over mandagsraden. Tilbake går til forrige skjerm. Økter og appfordeling avrundes
+slik at radene summerer til den viste totalen.
