@@ -43,6 +43,23 @@ class TimelineScreenTest {
     ).asReversed()
     private val report = DayReport(rows.asReversed(), emptyList(), time(14, 8), true, false, false)
 
+    @Test fun `watching summary and app breakdown share Overview rounding`() {
+        val first = TimelinePeriod(time(14, 0), time(14, 0) + 90_000, Category.WATCHING, "Player A")
+        val second = TimelinePeriod(time(14, 10), time(14, 10) + 90_000, Category.WATCHING, "Player B")
+        var data by mutableStateOf(report.copy(periods = listOf(first, second)))
+        compose.setContent { SystemverktoyTheme {
+            DayScreen(day, day, time(17, 52), zone, data, { it }, {}, {}, {})
+        } }
+        compose.onNodeWithText("Sett på 3 min").assertExists()
+        compose.onNodeWithText("(Player A 2 · Player B 1)").assertExists()
+        compose.runOnIdle { data = data.copy(periods = listOf(first)) }
+        compose.onNodeWithText("Sett på 2 min").assertExists()
+        compose.onNodeWithText("(Player A 2)").assertExists()
+        compose.runOnIdle { data = data.copy(periods = listOf(first.copy(endExclusive = first.start + 20_000))) }
+        compose.onNodeWithText("Sett på 0 min").assertExists()
+        compose.onNodeWithText("(Player A 0)").assertExists()
+    }
+
     @Test fun `timeline initially focuses first row and details return to the opened row`() {
         val raw = listOf(
             RawEvent(time = time(14, 12), source = Source.USAGE, type = "ACTIVITY_RESUMED (1)", packageName = "Netflix", activity = "MainActivity"),

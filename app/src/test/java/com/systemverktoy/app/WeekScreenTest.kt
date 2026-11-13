@@ -40,6 +40,7 @@ class WeekScreenTest {
         compose.setContent { SystemverktoyTheme {
             WeekScreen(summary, today, today, { it }, { moved += it }, { opened = it }, { closed = true })
         } }
+        compose.onNodeWithText("Uke 46 · mandag 9. – søndag 15. november").assertExists()
         summary.days.forEach { compose.onNodeWithTag("week-day-${it.day}").assertIsDisplayed() }
         compose.onNodeWithTag("week-day-$today").assertIsFocused().performKeyInput { repeat(4) { pressKey(Key.DirectionUp) } }
         compose.onNodeWithTag("week-day-$monday").assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
@@ -58,6 +59,16 @@ class WeekScreenTest {
         back()
         assertTrue(closed)
     }
+    @Test fun `week heading includes both months when crossing a month boundary`() {
+        val start = LocalDate.parse("2026-11-30")
+        val summary = WeekSummary(start, (0L..6L).map { WeekDay(start.plusDays(it), 0, List(24) { HourCell.EMPTY }, false) },
+            0, null, emptyList(), 0, false)
+        compose.setContent { SystemverktoyTheme {
+            WeekScreen(summary, start, start.plusWeeks(1), { it }, {}, {}, {})
+        } }
+        compose.onNodeWithText("Uke 49 · mandag 30. november – søndag 6. desember").assertExists()
+    }
+
     @Test fun `up opens week from both first session and an empty day`() {
         var empty by mutableStateOf(false)
         var opened = 0

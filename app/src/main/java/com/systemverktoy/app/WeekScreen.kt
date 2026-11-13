@@ -69,8 +69,9 @@ internal fun WeekScreen(summary: WeekSummary?, selected: LocalDate, today: Local
         if (summary == null) { Text("Laster ukesoversikt…", color = Color.White); return@Column }
         val end = summary.start.plusDays(6)
         val dateFormat = DateTimeFormatter.ofPattern("EEEE d. MMMM", norwegian)
+        val startFormat = if (summary.start.month == end.month) DateTimeFormatter.ofPattern("EEEE d.", norwegian) else dateFormat
         Row {
-            Text("Uke ${summary.number} · ${summary.start.format(dateFormat)} – ${end.format(dateFormat)}",
+            Text("Uke ${summary.number} · ${summary.start.format(startFormat)} – ${end.format(dateFormat)}",
                 fontSize = 11.sp, color = muted, modifier = Modifier.weight(1f))
             Text("↑ / ↓ dag · OK åpne dagen · ← / → uke", fontSize = 11.sp, color = muted)
         }

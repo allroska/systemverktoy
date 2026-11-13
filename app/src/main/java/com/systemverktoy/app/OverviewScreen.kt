@@ -30,7 +30,9 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
     appName: (String) -> String, onMove: (Long) -> Unit, onOpen: (ViewingSession) -> Unit,
     onTimeline: () -> Unit, onWeek: () -> Unit = {}, onDiagnostics: () -> Unit, list: LazyListState, focusedAnchor: Long?, onFocus: (Long) -> Unit) {
     val sessions = remember(report) { viewingSessions(report?.periods.orEmpty()) }
-    val minutes = remember(sessions) { allocateMinutes(sessions.map { it.watching }) }
+    val minutes = remember(sessions, report) {
+        allocateMinutes(sessions.map { it.watching }, total = report?.watchingMinutes() ?: 0)
+    }
     val first = remember { FocusRequester() }
     val heading = remember { FocusRequester() }
     val footer = remember { FocusRequester() }

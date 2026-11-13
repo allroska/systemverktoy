@@ -49,6 +49,22 @@ class WeekSummaryBuilderTest {
         assertEquals(s.total, s.apps.sumOf { it.minutes })
         assertEquals(s.total, s.appLines.sumOf { it.minutes })
     }
+    @Test fun `days before monitoring have empty cells even with imported periods`() {
+        val monitored = monday.plusDays(2)
+        val s = weekSummary(HistoryBatch(emptyList(), at(monday), monitoringStart = at(monitored)),
+            monday, zone, at(monday.plusDays(4), 12), "own") { day ->
+            report(listOf(Category.HDMI, Category.UNKNOWN, Category.WATCHING).mapIndexed { i, category ->
+                TimelinePeriod(at(day, i), at(day, i) + 60_000, category, "player")
+            })
+        }
+        s.days.take(2).forEach { day ->
+            assertEquals(0L, day.minutes)
+            assertTrue(day.cells.all { it == HourCell.EMPTY })
+        }
+        assertEquals(listOf(HourCell.HDMI, HourCell.UNKNOWN, HourCell.WATCHING), s.days[2].cells.take(3))
+        assertTrue(s.days.last().cells.all { it == HourCell.FUTURE })
+    }
+
     @Test fun `hour cells sum intersections and use watching HDMI unknown priority`() {
         val a = at(monday, 10)
         val rows = listOf(TimelinePeriod(a, a + 60_000, Category.UNKNOWN),

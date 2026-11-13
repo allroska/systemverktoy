@@ -35,7 +35,8 @@ internal fun weekSummary(batch: HistoryBatch, selected: LocalDate, zone: ZoneId,
     fun eligible(day: LocalDate) = monitoringDay != null && day >= monitoringDay && day <= today
     val reports = (0L..6L).associate { offset -> val date = start.plusDays(offset); date to calculate(date) }
     val days = reports.map { (date, report) -> WeekDay(date,
-        if (eligible(date)) report.watchingMinutes() else 0, hourCells(date, report.periods, zone, now), date > today) }
+        if (eligible(date)) report.watchingMinutes() else 0,
+        hourCells(date, if (eligible(date)) report.periods else emptyList(), zone, now), date > today) }
     val counted = days.filter { eligible(it.day) }
     val previous = (1L..7L).map { start.minusDays(it) }.filter(::eligible)
     val durations = reports.filterKeys(::eligible).values.flatMap { it.watchingByApp.entries }
