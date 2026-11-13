@@ -28,8 +28,11 @@ import java.util.Locale
 @Composable
 internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, report: DayReport?,
     appName: (String) -> String, onMove: (Long) -> Unit, onOpen: (ViewingSession) -> Unit,
-    onTimeline: () -> Unit, onDiagnostics: () -> Unit, list: LazyListState, focusedAnchor: Long?, onFocus: (Long) -> Unit) {
+    onTimeline: () -> Unit, onWeek: () -> Unit = {}, onDiagnostics: () -> Unit, list: LazyListState, focusedAnchor: Long?, onFocus: (Long) -> Unit) {
     val sessions = remember(report) { viewingSessions(report?.periods.orEmpty()) }
+    val minutes = remember(sessions, report) {
+        allocateMinutes(sessions.map { it.watching }, total = report?.watchingMinutes() ?: 0)
+    }
     val first = remember { FocusRequester() }
     val heading = remember { FocusRequester() }
     val footer = remember { FocusRequester() }
@@ -62,16 +65,18 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
         }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             DayHeading(if (day == today) "I dag" else if (day == today.minusDays(1)) "I går" else "Tidligere dag",
-                Modifier.focusRequester(heading).focusProperties { down = if (sessions.isEmpty()) footer else first }, onDiagnostics)
+                Modifier.focusRequester(heading).onPreviewKeyEvent {
+                    if (it.key == Key.DirectionUp) { if (it.type == KeyEventType.KeyDown) onWeek(); true } else false
+                }.focusProperties { down = if (sessions.isEmpty()) footer else first }, onDiagnostics)
             Text(" · " + day.format(DateTimeFormatter.ofPattern("EEEE d. MMMM", Locale.forLanguageTag("nb"))),
                 fontSize = 11.sp, color = muted, modifier = Modifier.weight(1f))
-            Text("← / → dag · OK økt · ↓ detaljer", fontSize = 11.sp, color = muted)
+            Text("← / → dag · OK økt · ↑ uke · ↓ detaljer", fontSize = 11.sp, color = muted)
         }
         if (report == null) { Text("Laster oversikt…", color = Color(0xFFEEF1F4)); return@Column }
         Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(if (day == today) "TV-titting i dag" else "TV-titting", fontSize = 16.sp, color = muted)
-            Text(durationText(report.total(Category.WATCHING)), fontSize = 44.sp, color = blue)
+            Text(minutesText(report.watchingMinutes()), fontSize = 44.sp, color = blue)
             Text("${if (count == 1) "1 økt" else "$count økter"} · første påslag ${firstOnText(report, zone)}", fontSize = 15.sp, color = muted)
         }
         monitoringText(report, day, zone)?.let { Text(it, fontSize = 11.sp, color = muted) }
@@ -87,7 +92,10 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
                 Row(focusModifier.fillMaxWidth().focusProperties { if (index == 0) up = heading; if (index == sessions.lastIndex) down = footer }
                     .onFocusChanged { focused = it.isFocused; if (focused) onFocus(session.start) }
                     .onPreviewKeyEvent {
-                        if (index == sessions.lastIndex && it.key == Key.DirectionDown) {
+                        if (index == 0 && it.key == Key.DirectionUp) {
+                            if (it.type == KeyEventType.KeyDown && it.nativeKeyEvent.repeatCount == 0) onWeek()
+                            true
+                        } else if (index == sessions.lastIndex && it.key == Key.DirectionDown) {
                             if (it.type == KeyEventType.KeyDown && it.nativeKeyEvent.repeatCount == 0) onTimeline()
                             true
                         } else false
@@ -104,7 +112,7 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
                     Box(Modifier.weight(1f).height(8.dp).background(Color(0xFF2B3640), shape)) {
                         if (!session.unknown) Box(Modifier.fillMaxHeight().fillMaxWidth(session.cumulative).background(blue, shape))
                     }
-                    Text(if (session.unknown) "avspilling ukjent" else durationText(session.watching), fontSize = 15.sp,
+                    Text(if (session.unknown) "avspilling ukjent" else minutesText(minutes[index]), fontSize = 15.sp,
                         color = if (session.unknown) muted else Color.White, modifier = Modifier.width(if (session.unknown) 142.dp else 100.dp))
                 }
             }
@@ -112,7 +120,9 @@ internal fun OverviewScreen(day: LocalDate, today: LocalDate, zone: ZoneId, repo
         var footerFocused by remember { mutableStateOf(false) }
         Row(Modifier.fillMaxWidth().focusRequester(footer).onFocusChanged { footerFocused = it.isFocused }
             .border(2.dp, if (footerFocused) Color.White else Color.Transparent).onPreviewKeyEvent {
-                if (it.key == Key.DirectionDown) { if (it.type == KeyEventType.KeyDown) onTimeline(); true } else false
+                if (sessions.isEmpty() && it.key == Key.DirectionUp) {
+                    if (it.type == KeyEventType.KeyDown && it.nativeKeyEvent.repeatCount == 0) onWeek(); true
+                } else if (it.key == Key.DirectionDown) { if (it.type == KeyEventType.KeyDown) onTimeline(); true } else false
             }.clickable(onClick = onTimeline).padding(vertical = 4.dp)) {
             Text("HDMI / TV-kanaler ${durationText(report.total(Category.HDMI))} · Sto bare på ${durationText(report.total(Category.IDLE))}",
                 color = muted, fontSize = 13.sp, modifier = Modifier.weight(1f))

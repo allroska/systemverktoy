@@ -30,10 +30,25 @@ class PinGateTest {
         compose.onNodeWithText("Velg PIN-kode").assertExists()
         org.junit.Assert.assertFalse(store.configured)
         compose.onRoot().performKeyInput { pressKey(Key.Four) }
+        compose.onNodeWithText("Tast alle fire sifrene.").assertDoesNotExist()
         repeat(4) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("●") }
         compose.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("Gjenta PIN-koden").assertExists()
         repeat(4) { compose.onNodeWithTag("pin-digit-$it").assertTextEquals("○") }
+        store.reset()
+    }
+    @Test fun `wrong PIN message clears on new arrow entry and correct code unlocks`() {
+        val store = PinStore(RuntimeEnvironment.getApplication())
+        store.reset(); store.create("1234")
+        compose.setContent { SystemverktoyTheme { PinGate { androidx.tv.material3.Text("Beskyttet innhold") } } }
+        compose.onRoot().performKeyInput { repeat(4) { pressKey(Key.Zero) }; pressKey(Key.DirectionCenter) }
+        compose.waitUntil(10000) { compose.onAllNodesWithText("Feil PIN-kode.").fetchSemanticsNodes().isNotEmpty() }
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.onNodeWithText("Feil PIN-kode.").assertDoesNotExist()
+        compose.onRoot().performKeyInput {
+            pressKey(Key.One); pressKey(Key.Two); pressKey(Key.Three); pressKey(Key.Four); pressKey(Key.DirectionCenter)
+        }
+        compose.waitUntil(10000) { compose.onAllNodesWithText("Beskyttet innhold").fetchSemanticsNodes().isNotEmpty() }
         store.reset()
     }
     @Test fun `arrows reveal only the current digit and mask it when moving away`() {

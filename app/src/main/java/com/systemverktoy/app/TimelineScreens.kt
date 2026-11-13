@@ -108,9 +108,11 @@ internal fun DayScreen(day: LocalDate, today: LocalDate, now: Long, zone: ZoneId
         if (report == null) { Text("Laster tidslinje…", color = ink, fontSize = 18.sp); return@Column }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SummaryValue("Sett på", durationText(report.total(Category.WATCHING)), Category.WATCHING)
-            val apps = report.watchingByApp.entries.sortedByDescending { it.value }.joinToString(" · ") {
-                "${appName(it.key)} ${durationText(it.value).removeSuffix(" min")}" }
+            SummaryValue("Sett på", minutesText(report.watchingMinutes()), Category.WATCHING)
+            val appDurations = report.watchingByApp.entries.sortedByDescending { it.value }
+            val appMinutes = allocateMinutes(appDurations.map { it.value }, total = report.watchingMinutes())
+            val apps = appDurations.mapIndexed { index, app ->
+                "${appName(app.key)} ${minutesText(appMinutes[index]).removeSuffix(" min")}" }.joinToString(" · ")
             if (apps.isNotEmpty()) Text("($apps)", fontSize = 13.sp, color = muted,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             Text("|", color = muted, fontSize = 14.sp)

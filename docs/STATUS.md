@@ -24,7 +24,12 @@ Privat, helt lokal Android TV-app («Systemverktøy») for en Sony BRAVIA med Go
 | Ferdig | Logging i bakgrunnen, klassifisering v2 (SPEC kap. 4), kompakt detaljert tidslinje (5.1), **Oversikt** som startskjerm (5.0), **PIN** (5.6), fileksport til PC (Oppgave 4), riktig «Første påslag» etter omstart/over midnatt |
 | Bekreftet på TV | Netflix og NRK TV melder avspilling via MediaSession. Skjermsparer, HDMI 4 (Sony TV-appen), automatisk omstart (tidspunktet varierer). Oversikt-tallet for 12.11 stemmer med rådata. Se `docs/RESEARCH.md` |
 | Ikke testet ennå | Avspilling i TV 2 Play, Prime, Viaplay, Disney+. PIN på selve TV-en (`docs/TESTPLAN.md`) |
-| Neste naturlige steg | **Oppgave 6** i `docs/OPPGAVER.md`: Ukesoversikt (SPEC 5.7, skisse `docs/skisser/Ukesoversikt.png`) + to små rettelser. Klar til å limes inn i Codex |
+| Neste naturlige steg | Review og TV-test av Oppgave 6: Ukesoversikt, avrunding og PIN-meldinger (se `docs/TESTPLAN.md`) |
+
+Oppgave 6 (denne PR-en): Ukesoversikt mandag–søndag med snitt, appfordeling og
+24-timers døgnkart. Opp fra første økt/tom Oversikt åpner uka. Økter og appfordeling
+fordeler rest-minutter slik at radene summerer riktig; PIN-feilmeldinger tømmes ved
+ny inntasting. TV-test gjenstår, se «Oppgave 6» i `docs/TESTPLAN.md`.
 
 ## Arbeidsflyt (én oppgave = én PR)
 
@@ -69,7 +74,7 @@ powershell -ExecutionPolicy Bypass -File $HOME\Systemverktoy\hent-tvlogg.ps1 -Tv
 
 ## Backlog
 
-Se «Senere» i `docs/OPPGAVER.md`, og «Kan vente» i Claude-reviewene på PR #6 og #7 (f.eks. gammel melding på PIN-skjermen, grå «avspilling ukjent»-økter for systemapper, `DREAMING_STOPPED`-rekkefølge, PIN-sperre ved klokkejustering). Ideer: strammere støyfilter, test av flere strømmeapper, branch protection på `main`. Åpent produktvalg: skal lyd uten bilde (f.eks. Spotify Connect med skjermen av, sett 12.11) vises, og i så fall hvordan?
+Se «Senere» i `docs/OPPGAVER.md`, og «Kan vente» i Claude-reviewene på PR #6 og #7 (f.eks. grå «avspilling ukjent»-økter for systemapper, `DREAMING_STOPPED`-rekkefølge, PIN-sperre ved klokkejustering). Ideer: strammere støyfilter, test av flere strømmeapper, branch protection på `main`. Åpent produktvalg: skal lyd uten bilde (f.eks. Spotify Connect med skjermen av, sett 12.11) vises, og i så fall hvordan?
 
 ## Hemmeligheter (ikke i repoet)
 

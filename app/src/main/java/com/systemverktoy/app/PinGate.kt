@@ -93,6 +93,7 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
     fun submit() {
         if (busy || now < store.blockedUntil) return
         if (enteredPlaces.size != 4) { message = "Tast alle fire sifrene."; return }
+        message = ""
         val entered = digits
         digits = "0000"; cursor = 0; enteredPlaces = emptySet(); showCurrentDigit = false
         if (!store.configured && confirmation == null) { confirmation = entered; return }
@@ -103,7 +104,7 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
                 if (!store.configured) { store.create(entered); true } else store.verify(entered, System.currentTimeMillis())
             }
             busy = false
-            if (success) onUnlock() else message = "Feil PIN-kode."
+            if (success) { message = ""; onUnlock() } else message = "Feil PIN-kode."
         }
     }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(64.dp)
@@ -119,6 +120,7 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
             if (handled && event.type == KeyEventType.KeyDown && !busy && now >= store.blockedUntil) {
                 when {
                     digit != null -> {
+                        message = ""
                         digits = digits.replaceRange(cursor, cursor + 1, digit.toString())
                         enteredPlaces = enteredPlaces + cursor
                         showCurrentDigit = false
@@ -128,12 +130,14 @@ private fun PinScreen(store: PinStore, onUnlock: () -> Unit) {
                         enteredPlaces = enteredPlaces + cursor
                         cursor = (cursor + if (event.key == Key.DirectionLeft) -1 else 1).coerceIn(0, 3)
                         enteredPlaces = enteredPlaces + cursor
+                        message = ""
                         showCurrentDigit = true
                     }
                     event.key in listOf(Key.DirectionUp, Key.DirectionDown) -> {
                         val value = (digits[cursor].digitToInt() + if (event.key == Key.DirectionUp) 1 else 9) % 10
                         digits = digits.replaceRange(cursor, cursor + 1, value.toString())
                         enteredPlaces = enteredPlaces + cursor
+                        message = ""
                         showCurrentDigit = true
                     }
                     event.nativeKeyEvent.repeatCount == 0 -> submit()

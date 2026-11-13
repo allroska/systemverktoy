@@ -1,5 +1,6 @@
 package com.systemverktoy.app
 
+import androidx.compose.runtime.*
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -19,6 +20,24 @@ import java.time.ZoneId
 @OptIn(ExperimentalTestApi::class)
 class OverviewScreenTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun `filtered short session still contributes to total and displayed row minutes`() {
+        val day = LocalDate.parse("2026-11-11")
+        val zone = ZoneId.of("Europe/Oslo")
+        val start = day.atTime(14, 0).atZone(zone).toInstant().toEpochMilli()
+        var shortMillis by mutableLongStateOf(5_000)
+        compose.setContent { SystemverktoyTheme {
+            val rows = listOf(TimelinePeriod(start, start + 200_000, Category.WATCHING, "Player"),
+                TimelinePeriod(start + 600_000, start + 600_000 + shortMillis, Category.WATCHING, "Trailer"))
+            TimelineNavigation(day, day, start + 700_000, zone,
+                DayReport(rows, emptyList(), start, true, false, false), { it }, {}) { }
+        } }
+        compose.onNodeWithText("Trailer").assertDoesNotExist()
+        compose.onAllNodesWithText("3 min").assertCountEquals(2) // Total and the single visible session.
+        compose.runOnIdle { shortMillis = 50_000 }
+        compose.onNodeWithText("Trailer").assertDoesNotExist()
+        compose.onAllNodesWithText("4 min").assertCountEquals(2)
+    }
+
     @Test fun `overview opens whole session then down opens timeline and back restores overview`() {
         val day = LocalDate.parse("2026-11-11")
         val zone = ZoneId.of("Europe/Oslo")
